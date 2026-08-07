@@ -100,7 +100,7 @@
 
     <div class="ct">Oportunidades por Fuente y Etapa &middot; Pipeline COMPRADORES</div>
     <table>
-      <colgroup><col style="width:18%"><col style="width:11.71%"><col style="width:11.71%"><col style="width:11.71%"><col style="width:11.71%"><col style="width:11.71%"><col style="width:11.71%"><col style="width:11.71%"></colgroup>
+      <colgroup><col style="width:18%"><col style="width:10.25%"><col style="width:10.25%"><col style="width:10.25%"><col style="width:10.25%"><col style="width:10.25%"><col style="width:10.25%"><col style="width:10.25%"><col style="width:10.25%"></colgroup>
       <thead>
         <tr>
           <th style="text-align:left">Fuente</th>
@@ -110,6 +110,7 @@
           <th>Post<br>Visita</th>
           <th>Cerrado</th>
           <th>Descartado</th>
+          <th>Transici&oacute;n</th>
           <th>Total</th>
         </tr>
       </thead>
@@ -332,7 +333,7 @@
   }
 
   const FUENTES = ['META-REEL','DIRECTO','META-LM','CORREO','FORM-WEB','META-DM','TOCTOC'];
-  const ETAPAS = [['POR RECORDAR'],['EN SEGUIMIENTO'],['VISITA'],['SEG POST VISITA'],['CERRADO'],['DESCARTADO']];
+  const ETAPAS = [['POR RECORDAR'],['EN SEGUIMIENTO'],['VISITA'],['SEG POST VISITA'],['CERRADO'],['DESCARTADO'],['TRANSICION']];
   function computeFuenteEtapa(range){
     const {start,end} = range;
     const rows = RAW.ghl_opp.filter(g=> ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
