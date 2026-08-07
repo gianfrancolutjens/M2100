@@ -125,8 +125,7 @@
       </div>
       <div class="fe-chart-col">
         <div class="chart-col-title">Motivos de Descarte</div>
-        <div class="chart-box" style="height:240px"><canvas id="chartMotivos" role="img" aria-label="Distribucion de motivos de descarte">Grafico de torta: distribucion de motivos de descarte de oportunidades.</canvas></div>
-        <div class="sn" id="motivosNote"></div>
+        <div class="chart-box" style="height:300px"><canvas id="chartMotivos" role="img" aria-label="Distribucion de motivos de descarte">Grafico de torta: distribucion de motivos de descarte de oportunidades.</canvas></div>
       </div>
     </div>
 
@@ -592,9 +591,7 @@
 
   function renderMotivosDescarte(mot){
     destroyChart('chartMotivos');
-    const note = document.getElementById('motivosNote');
     if(mot.total===0){
-      note.textContent = 'Sin oportunidades en etapa Descartado dentro de esta ventana.';
       return;
     }
     const labels = mot.entries.map(e=>e[0]);
@@ -614,7 +611,6 @@
         }
       }
     });
-    note.textContent = 'Motivos de descarte (custom field "Razón Descartado" en GHL) de oportunidades DESCARTADO creadas dentro de la ventana seleccionada — total '+fmtInt(mot.total)+'.';
   }
 
   function render(key){
