@@ -149,7 +149,7 @@
 
     <div class="ct">Detalle por Buyer y Anuncio</div>
     <table>
-      <colgroup><col style="width:17%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"><col style="width:6.92%"></colgroup>
+      <colgroup><col style="width:17%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"></colgroup>
       <thead>
         <tr>
           <th style="text-align:left">Anuncio</th>
@@ -163,13 +163,15 @@
           <th>WSP<br>META</th>
           <th>WSP<br>GHL*</th>
           <th>Leads<br>Visita*</th>
+          <th>Leads<br>P. Visita*</th>
           <th>Costo/<br>WSP</th>
           <th>Costo/<br>Visita</th>
+          <th>Costo<br>P. Visita</th>
         </tr>
       </thead>
       <tbody id="o1Body"></tbody>
     </table>
-    <div class="sn">*WSP GHL (META-REEL), Leads Visita y Costo/Visita son datos de GHL a nivel de Buyer &mdash; no existe granularidad por anuncio individual en GHL, por eso estos 3 valores se repiten en cada fila de anuncio del mismo Buyer (marcados con *) y aparecen una sola vez, sin repetir, en la fila de TOTAL de ese Buyer.</div>
+    <div class="sn">*WSP GHL (META-REEL), Leads Visita, Leads P. Visita, Costo/Visita y Costo P. Visita son datos de GHL a nivel de Buyer &mdash; no existe granularidad por anuncio individual en GHL, por eso estos 5 valores se repiten en cada fila de anuncio del mismo Buyer (marcados con *) y aparecen una sola vez, sin repetir, en la fila de TOTAL de ese Buyer. Leads P. Visita = oportunidades del pipeline COMPRADORES con Fuente=META-REEL y tag &quot;post_visita&quot;.</div>
 
     <div class="ct">Evoluci&oacute;n diaria por Buyer</div>
     <div class="chart-grid">
@@ -329,7 +331,7 @@
     const {start,end} = range;
     const rows = RAW.o1.filter(r=>r[0]>=start && r[0]<=end);
     const personas = ['RF','EU'];
-    const totals = {gasto:0,impre:0,alcance:0,hook:0,v50:0,v75:0,resultados:0,wspGhl:0,visitas:0,postVisita:0};
+    const totals = {gasto:0,impre:0,alcance:0,hook:0,v50:0,v75:0,resultados:0,wspGhl:0,visitas:0,postVisita:0,postVisitaP:0};
     const byPersona = {};
     personas.forEach(p=>{
       const prows = rows.filter(r=>r[1]===p);
@@ -346,8 +348,13 @@
       const ghlP = RAW.ghl_opp.filter(g=> g[2]===p && g[1]==='META-REEL' && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
       const wspGhl = ghlP.length;
       const visitas = ghlP.filter(g=>g[4].includes('visita')).length;
-      byPersona[p] = {ads, gasto:pgasto, impre:pimpre, alcance:palcance, hook:phook, v50:pv50, v75:pv75, resultados:presultados, wspGhl, visitas};
-      totals.gasto+=pgasto; totals.impre+=pimpre; totals.alcance+=palcance; totals.hook+=phook; totals.v50+=pv50; totals.v75+=pv75; totals.resultados+=presultados; totals.wspGhl+=wspGhl; totals.visitas+=visitas;
+      // Leads P. Visita (pedido explicito 11-ago-2026): mismo criterio que "visitas" pero
+      // con tag "post_visita" (con guion bajo) en vez de "visita" — no hay atribucion a
+      // nivel de anuncio individual en GHL, por eso se calcula a nivel de Buyer igual que
+      // wspGhl/visitas y se repite en cada fila de anuncio (ver adRow/totRow).
+      const postVisitaP = ghlP.filter(g=>g[4].includes('post_visita')).length;
+      byPersona[p] = {ads, gasto:pgasto, impre:pimpre, alcance:palcance, hook:phook, v50:pv50, v75:pv75, resultados:presultados, wspGhl, visitas, postVisitaP};
+      totals.gasto+=pgasto; totals.impre+=pimpre; totals.alcance+=palcance; totals.hook+=phook; totals.v50+=pv50; totals.v75+=pv75; totals.resultados+=presultados; totals.wspGhl+=wspGhl; totals.visitas+=visitas; totals.postVisitaP+=postVisitaP;
     });
     // Nivel 8 del embudo (pedido explicito 07-ago-2026): oportunidades del pipeline
     // COMPRADORES con Fuente=META-REEL y tag "post_visita" (asi viene en GHL, con guion
@@ -456,9 +463,10 @@
         + '<td>'+fmtMoney(a.impre? a.gasto/a.impre*1000:0)+'</td>'
         + '<td>'+fmtPctAdaptive(a.impre? a.hook/a.impre:0)+'</td><td>'+fmtPctAdaptive(a.impre? a.v50/a.impre:0)+'</td><td>'+fmtPctAdaptive(a.impre? a.v75/a.impre:0)+'</td>'
         + '<td>'+fmtInt(a.resultados)+'</td>'
-        + '<td class="muted-repeat">'+fmtInt(p.wspGhl)+'*</td><td class="muted-repeat">'+fmtInt(p.visitas)+'*</td>'
+        + '<td class="muted-repeat">'+fmtInt(p.wspGhl)+'*</td><td class="muted-repeat">'+fmtInt(p.visitas)+'*</td><td class="muted-repeat">'+fmtInt(p.postVisitaP)+'*</td>'
         + moneyOrIndetTd(a.gasto,a.resultados)
         + moneyOrIndetTd(p.gasto,p.visitas,'muted-repeat')
+        + moneyOrIndetTd(p.gasto,p.postVisitaP,'muted-repeat')
         + '</tr>';
     }
     function totRow(label,p){
@@ -467,17 +475,18 @@
         + '<td>'+fmtMoney(p.impre? p.gasto/p.impre*1000:0)+'</td>'
         + '<td>'+fmtPctAdaptive(p.impre? p.hook/p.impre:0)+'</td><td>'+fmtPctAdaptive(p.impre? p.v50/p.impre:0)+'</td><td>'+fmtPctAdaptive(p.impre? p.v75/p.impre:0)+'</td>'
         + '<td>'+fmtInt(p.resultados)+'</td>'
-        + '<td>'+fmtInt(p.wspGhl)+'</td><td>'+fmtInt(p.visitas)+'</td>'
+        + '<td>'+fmtInt(p.wspGhl)+'</td><td>'+fmtInt(p.visitas)+'</td><td>'+fmtInt(p.postVisitaP)+'</td>'
         + moneyOrIndetTd(p.gasto,p.resultados)
         + moneyOrIndetTd(p.gasto,p.visitas)
+        + moneyOrIndetTd(p.gasto,p.postVisitaP)
         + '</tr>';
     }
 
     let body = '';
-    body += '<tr class="grp"><td colspan="13"><span class="chip bp-rf">RF</span>&nbsp; REGIONAL FRECUENTE</td></tr>';
+    body += '<tr class="grp"><td colspan="15"><span class="chip bp-rf">RF</span>&nbsp; REGIONAL FRECUENTE</td></tr>';
     o1.byPersona.RF.ads.forEach(a=> body += adRow(a, o1.byPersona.RF));
     body += totRow('TOTAL REGIONAL FRECUENTE', o1.byPersona.RF);
-    body += '<tr class="grp"><td colspan="13"><span class="chip bp-eu">EU</span>&nbsp; EJECUTIVO URBANO</td></tr>';
+    body += '<tr class="grp"><td colspan="15"><span class="chip bp-eu">EU</span>&nbsp; EJECUTIVO URBANO</td></tr>';
     o1.byPersona.EU.ads.forEach(a=> body += adRow(a, o1.byPersona.EU));
     body += totRow('TOTAL EJECUTIVO URBANO', o1.byPersona.EU);
     body += totRow('TOTAL GENERAL', t);
