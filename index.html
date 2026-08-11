@@ -195,7 +195,7 @@
 
     <div class="ct">Detalle por Lead Magnet</div>
     <table>
-      <colgroup><col style="width:12%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"><col style="width:5.87%"></colgroup>
+      <colgroup><col style="width:12%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"><col style="width:5.18%"></colgroup>
       <thead>
         <tr>
           <th style="text-align:left">Lead Magnet</th>
@@ -213,12 +213,14 @@
           <th>LM<br>GHL</th>
           <th>Contacto</th>
           <th>Visitas</th>
+          <th>P.<br>Visita</th>
           <th>Costo/<br>Visita</th>
+          <th>Costo<br>P. Visita</th>
         </tr>
       </thead>
       <tbody id="o2Body"></tbody>
     </table>
-    <div class="sn">Descargas GHL: oportunidades registradas en el pipeline LEAD MAGNETS. Contacto: oportunidades del pipeline COMPRADORES etiquetadas lm1/lm2, en cualquier etapa (se cuentan aunque el campo Persona venga vacio). Visitas: subconjunto de Contacto que ademas tiene el tag "visita". Costo/Visita = Gasto / Visitas; si Visitas es 0, se muestra "Indet". Todas las m&eacute;tricas GHL de este bloque se calculan sobre la ventana de fechas seleccionada arriba.</div>
+    <div class="sn">Descargas GHL: oportunidades registradas en el pipeline LEAD MAGNETS. Contacto: oportunidades del pipeline COMPRADORES etiquetadas lm1/lm2, en cualquier etapa (se cuentan aunque el campo Persona venga vacio). Visitas: subconjunto de Contacto que ademas tiene el tag "visita". P. Visita: subconjunto de Contacto que ademas tiene el tag "post_visita". Costo/Visita = Gasto / Visitas; Costo P. Visita = Gasto / P. Visita; si el denominador es 0, se muestra "Indet". Todas las m&eacute;tricas GHL de este bloque se calculan sobre la ventana de fechas seleccionada arriba.</div>
 
     <div class="ct">Evoluci&oacute;n diaria por Lead Magnet</div>
     <div class="chart-grid">
@@ -367,7 +369,7 @@
     const {start,end} = range;
     const rows = RAW.o2.filter(r=>r[0]>=start && r[0]<=end);
     const lms = ['LM1','LM2'];
-    const totals = {gasto:0,impre:0,alcance:0,clicks:0,hook:0,v50:0,v75:0,leads:0,lmGhl:0,contacto:0,visitas:0,postVisita:0};
+    const totals = {gasto:0,impre:0,alcance:0,clicks:0,hook:0,v50:0,v75:0,leads:0,lmGhl:0,contacto:0,visitas:0,postVisita:0,postVisitaLM:0};
     const byLM = {};
     lms.forEach(lm=>{
       const lrows = rows.filter(r=>r[1]===lm);
@@ -379,8 +381,12 @@
       const contactoRows = RAW.ghl_opp.filter(g=> g[4].includes(tag) && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
       const contacto = contactoRows.length;
       const visitas = contactoRows.filter(g=>g[4].includes('visita')).length;
-      byLM[lm] = {gasto,impre,alcance,clicks,hook,v50,v75,leads,lmGhl,contacto,visitas};
-      totals.gasto+=gasto; totals.impre+=impre; totals.alcance+=alcance; totals.clicks+=clicks; totals.hook+=hook; totals.v50+=v50; totals.v75+=v75; totals.leads+=leads; totals.lmGhl+=lmGhl; totals.contacto+=contacto; totals.visitas+=visitas;
+      // P. Visita (pedido explicito 11-ago-2026): mismo criterio que "visitas" pero con
+      // tag "post_visita" en vez de "visita", sobre el mismo subconjunto de Contacto
+      // (oportunidades COMPRADORES etiquetadas lm1/lm2).
+      const postVisitaLM = contactoRows.filter(g=>g[4].includes('post_visita')).length;
+      byLM[lm] = {gasto,impre,alcance,clicks,hook,v50,v75,leads,lmGhl,contacto,visitas,postVisitaLM};
+      totals.gasto+=gasto; totals.impre+=impre; totals.alcance+=alcance; totals.clicks+=clicks; totals.hook+=hook; totals.v50+=v50; totals.v75+=v75; totals.leads+=leads; totals.lmGhl+=lmGhl; totals.contacto+=contacto; totals.visitas+=visitas; totals.postVisitaLM+=postVisitaLM;
     });
     // Nivel 8 del embudo (pedido explicito 07-ago-2026): oportunidades del pipeline
     // COMPRADORES con Fuente=META-LM y tag "post_visita". No se separa por LM1/LM2 (la
@@ -525,8 +531,9 @@
         + '<td>'+fmtPctAdaptive(l.impre? l.hook/l.impre:0)+'</td><td>'+fmtPctAdaptive(l.impre? l.v50/l.impre:0)+'</td><td>'+fmtPctAdaptive(l.impre? l.v75/l.impre:0)+'</td>'
         + '<td>'+fmtInt(l.leads)+'</td>'
         + moneyOrIndetTd(l.gasto,l.leads)
-        + '<td>'+fmtInt(l.lmGhl)+'</td><td>'+fmtInt(l.contacto)+'</td><td>'+fmtInt(l.visitas)+'</td>'
+        + '<td>'+fmtInt(l.lmGhl)+'</td><td>'+fmtInt(l.contacto)+'</td><td>'+fmtInt(l.visitas)+'</td><td>'+fmtInt(l.postVisitaLM)+'</td>'
         + moneyOrIndetTd(l.gasto,l.visitas)
+        + moneyOrIndetTd(l.gasto,l.postVisitaLM)
         + '</tr>';
     }
     function totRow2(t){
@@ -537,8 +544,9 @@
         + '<td>'+fmtPctAdaptive(t.impre? t.hook/t.impre:0)+'</td><td>'+fmtPctAdaptive(t.impre? t.v50/t.impre:0)+'</td><td>'+fmtPctAdaptive(t.impre? t.v75/t.impre:0)+'</td>'
         + '<td>'+fmtInt(t.leads)+'</td>'
         + moneyOrIndetTd(t.gasto,t.leads)
-        + '<td>'+fmtInt(t.lmGhl)+'</td><td>'+fmtInt(t.contacto)+'</td><td>'+fmtInt(t.visitas)+'</td>'
+        + '<td>'+fmtInt(t.lmGhl)+'</td><td>'+fmtInt(t.contacto)+'</td><td>'+fmtInt(t.visitas)+'</td><td>'+fmtInt(t.postVisitaLM)+'</td>'
         + moneyOrIndetTd(t.gasto,t.visitas)
+        + moneyOrIndetTd(t.gasto,t.postVisitaLM)
         + '</tr>';
     }
 
