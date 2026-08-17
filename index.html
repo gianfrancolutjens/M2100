@@ -150,10 +150,11 @@
 
     <div class="ct">Detalle por Buyer y Anuncio</div>
     <table>
-      <colgroup><col style="width:17%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"><col style="width:5.93%"></colgroup>
+      <colgroup><col style="width:15%"><col style="width:5%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"><col style="width:5.71%"></colgroup>
       <thead>
         <tr>
           <th style="text-align:left">Anuncio</th>
+          <th>D&iacute;as<br>Activo</th>
           <th>Gasto</th>
           <th>IMPRE</th>
           <th>FREQ</th>
@@ -172,7 +173,7 @@
       </thead>
       <tbody id="o1Body"></tbody>
     </table>
-    <div class="sn">*WSP GHL (META-REEL), Leads Visita, Leads P. Visita, Costo/Visita y Costo P. Visita son datos de GHL a nivel de Buyer &mdash; no existe granularidad por anuncio individual en GHL, por eso estos 5 valores se repiten en cada fila de anuncio del mismo Buyer (marcados con *) y aparecen una sola vez, sin repetir, en la fila de TOTAL de ese Buyer. Leads P. Visita = oportunidades del pipeline COMPRADORES con Fuente=META-REEL y tag &quot;post_visita&quot;.</div>
+    <div class="sn">*WSP GHL (META-REEL), Leads Visita, Leads P. Visita, Costo/Visita y Costo P. Visita son datos de GHL a nivel de Buyer &mdash; no existe granularidad por anuncio individual en GHL, por eso estos 5 valores se repiten en cada fila de anuncio del mismo Buyer (marcados con *) y aparecen una sola vez, sin repetir, en la fila de TOTAL de ese Buyer. Leads P. Visita = oportunidades del pipeline COMPRADORES con Fuente=META-REEL y tag &quot;post_visita&quot;. D&iacute;as Activo = d&iacute;as desde el primer registro del anuncio en el hist&oacute;rico de datos hasta Ayer (proxy de la fecha de creaci&oacute;n real en Meta, que el Sheet no trae); no aplica a las filas de TOTAL.</div>
 
     <div class="ct">Evoluci&oacute;n diaria por Buyer</div>
     <div class="chart-grid">
@@ -357,6 +358,28 @@
     return ' <span class="chip '+cls+'">'+label+'</span>';
   }
 
+  // Dias Activo (pedido explicito 17-ago-2026): proxy de la fecha de creacion del
+  // anuncio. El Sheet no trae la fecha real de creacion de Meta, asi que se usa el
+  // primer dia en que el anuncio aparece en el historico completo de RAW.o1 (no
+  // filtrado por la ventana seleccionada) como aproximacion del inicio. Se calcula
+  // una sola vez sobre todo el historico, no por ventana, para que el numero no
+  // cambie al tocar los botones de filtro.
+  function computeAdFirstSeen(){
+    const m = {};
+    RAW.o1.forEach(r=>{
+      const key = shortAdName(r[2], r[1]);
+      if(!m[key] || r[0] < m[key]) m[key] = r[0];
+    });
+    return m;
+  }
+  const AD_FIRST_SEEN = computeAdFirstSeen();
+  function diasActivo(adName){
+    const fechaMin = AD_FIRST_SEEN[adName];
+    if(!fechaMin || !YESTERDAY) return null;
+    const ms = new Date(YESTERDAY+'T00:00:00Z') - new Date(fechaMin+'T00:00:00Z');
+    return Math.round(ms/86400000) + 1;
+  }
+
   function computeO1(range){
     const {start,end} = range;
     const rows = RAW.o1.filter(r=>r[0]>=start && r[0]<=end);
@@ -501,7 +524,9 @@
     + '<div class="k"><div class="kl">Leads Visita (GHL)</div><div class="kv">'+fmtInt(t.visitas)+'</div><div class="ks2">de '+fmtInt(t.wspGhl)+' leads Meta-Reel</div></div>';
 
     function adRow(a,p){
+      const da = diasActivo(a.name);
       return '<tr><td>'+a.name+estadoChip(a.estado)+'</td>'
+        + '<td>'+(da!==null? fmtInt(da):'—')+'</td>'
         + '<td>'+fmtMoney(a.gasto)+'</td><td>'+fmtInt(a.impre)+'</td><td>'+ratioOrDash(a.impre,a.alcance)+'</td>'
         + '<td>'+fmtMoney(a.impre? a.gasto/a.impre*1000:0)+'</td>'
         + '<td>'+fmtPctAdaptive(a.impre? a.hook/a.impre:0)+'</td><td>'+fmtPctAdaptive(a.impre? a.v50/a.impre:0)+'</td><td>'+fmtPctAdaptive(a.impre? a.v75/a.impre:0)+'</td>'
@@ -514,6 +539,7 @@
     }
     function totRow(label,p){
       return '<tr class="tot"><td>'+label+'</td>'
+        + '<td>—</td>'
         + '<td>'+fmtMoney(p.gasto)+'</td><td>'+fmtInt(p.impre)+'</td><td>'+ratioOrDash(p.impre,p.alcance)+'</td>'
         + '<td>'+fmtMoney(p.impre? p.gasto/p.impre*1000:0)+'</td>'
         + '<td>'+fmtPctAdaptive(p.impre? p.hook/p.impre:0)+'</td><td>'+fmtPctAdaptive(p.impre? p.v50/p.impre:0)+'</td><td>'+fmtPctAdaptive(p.impre? p.v75/p.impre:0)+'</td>'
@@ -526,10 +552,10 @@
     }
 
     let body = '';
-    body += '<tr class="grp"><td colspan="15"><span class="chip bp-rf">RF</span>&nbsp; REGIONAL FRECUENTE</td></tr>';
+    body += '<tr class="grp"><td colspan="16"><span class="chip bp-rf">RF</span>&nbsp; REGIONAL FRECUENTE</td></tr>';
     o1.byPersona.RF.ads.forEach(a=> body += adRow(a, o1.byPersona.RF));
     body += totRow('TOTAL REGIONAL FRECUENTE', o1.byPersona.RF);
-    body += '<tr class="grp"><td colspan="15"><span class="chip bp-eu">EU</span>&nbsp; EJECUTIVO URBANO</td></tr>';
+    body += '<tr class="grp"><td colspan="16"><span class="chip bp-eu">EU</span>&nbsp; EJECUTIVO URBANO</td></tr>';
     o1.byPersona.EU.ads.forEach(a=> body += adRow(a, o1.byPersona.EU));
     body += totRow('TOTAL EJECUTIVO URBANO', o1.byPersona.EU);
     body += totRow('TOTAL GENERAL', t);
