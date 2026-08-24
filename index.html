@@ -449,17 +449,20 @@
     // Nivel 8 del embudo (pedido explicito 07-ago-2026): oportunidades del pipeline
     // COMPRADORES con Fuente=META-LM y tag "post_visita". No se separa por LM1/LM2 (la
     // Fuente en GHL ya viene como "META-LM" generico, sin distinguir el LM especifico).
-    totals.postVisita = RAW.ghl_opp.filter(g=> g[1]==='META-LM' && g[4].includes('post_visita') && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end).length;
+    totals.postVisita = RAW.ghl_opp.filter(g=> normFuente(g[1])==='META-LM' && g[4].includes('post_visita') && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end).length;
     return {byLM, totals};
   }
 
-  const FUENTES = ['META-REEL','DIRECTO','META-LM','META-LM1','CORREO','FORM-WEB','FORM-WEB-COTIZADOR','META-DM','TOCTOC'];
+  const FUENTES = ['META-REEL','DIRECTO','META-LM','META-DM','META-TOUR','FORM-WEB','CORREO','TOCTOC'];
+  // Variantes de una misma fuente que se consolidan en una sola fila de la tabla.
+  const FUENTE_ALIAS = {'META-LM1':'META-LM','META-LM2':'META-LM','FORM-WEB-COTIZADOR':'FORM-WEB'};
+  function normFuente(f){ return FUENTE_ALIAS[f] || f; }
   const ETAPAS = [['NUEVO'],['EN SEGUIMIENTO IA'],['POR RECORDAR IA'],['POR RECORDAR MANUAL'],['PARA CARO'],['VISITA'],['SEG POST VISITA'],['CERRADO'],['DESCARTADO']];
   function computeFuenteEtapa(range){
     const {start,end} = range;
     const rows = RAW.ghl_opp.filter(g=> ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
     const data = FUENTES.map(f=>{
-      const frows = rows.filter(g=>g[1]===f);
+      const frows = rows.filter(g=>normFuente(g[1])===f);
       const counts = ETAPAS.map(([et])=> frows.filter(g=>g[3]===et).length);
       const total = counts.reduce((a,b)=>a+b,0);
       return {fuente:f, counts, total};
