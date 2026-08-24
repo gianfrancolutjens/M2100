@@ -455,7 +455,7 @@
 
   const FUENTES = ['META-REEL','DIRECTO','META-LM','META-DM','META-TOUR','FORM-WEB','CORREO','TOCTOC'];
   // Variantes de una misma fuente que se consolidan en una sola fila de la tabla.
-  const FUENTE_ALIAS = {'META-LM1':'META-LM','META-LM2':'META-LM','FORM-WEB-COTIZADOR':'FORM-WEB'};
+  const FUENTE_ALIAS = {'META-LM1':'META-LM','META-LM2':'META-LM','FORM-WEB-COTIZADOR':'FORM-WEB','WEB':'FORM-WEB'};
   function normFuente(f){ return FUENTE_ALIAS[f] || f; }
   const ETAPAS = [['NUEVO'],['EN SEGUIMIENTO IA'],['POR RECORDAR IA'],['POR RECORDAR MANUAL'],['PARA CARO'],['VISITA'],['SEG POST VISITA'],['CERRADO'],['DESCARTADO']];
   function computeFuenteEtapa(range){
