@@ -117,16 +117,17 @@
     <div class="fe-grid">
       <div class="fe-table-col">
         <table>
-          <colgroup><col style="width:20%"><col style="width:8.5%"><col style="width:8.5%"><col style="width:8.5%"><col style="width:8.5%"><col style="width:8.5%"><col style="width:8.5%"><col style="width:8.5%"><col style="width:8.5%"><col style="width:12%"></colgroup>
+          <colgroup><col style="width:19%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:9%"></colgroup>
           <thead>
             <tr>
               <th style="text-align:left">Fuente</th>
+              <th>Nuevo</th>
+              <th>En Seg.<br>IA</th>
               <th>Por Rec.<br>IA</th>
               <th>Por Rec.<br>Manual</th>
-              <th>En Seg.<br>IA</th>
               <th>Para<br>Caro</th>
               <th>Visita</th>
-              <th>Post<br>Visita</th>
+              <th>Seg Post<br>Visita</th>
               <th>Cerrado</th>
               <th>Descartado</th>
               <th>Total</th>
@@ -453,11 +454,10 @@
   }
 
   const FUENTES = ['META-REEL','DIRECTO','META-LM','META-LM1','CORREO','FORM-WEB','FORM-WEB-COTIZADOR','META-DM','TOCTOC'];
-  const ETAPAS = [['POR RECORDAR IA'],['POR RECORDAR MANUAL'],['EN SEGUIMIENTO IA'],['PARA CARO'],['VISITA'],['SEG POST VISITA'],['CERRADO'],['DESCARTADO']];
+  const ETAPAS = [['NUEVO'],['EN SEGUIMIENTO IA'],['POR RECORDAR IA'],['POR RECORDAR MANUAL'],['PARA CARO'],['VISITA'],['SEG POST VISITA'],['CERRADO'],['DESCARTADO']];
   function computeFuenteEtapa(range){
     const {start,end} = range;
     const rows = RAW.ghl_opp.filter(g=> ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
-    const nuevoCount = rows.filter(g=>g[3]==='NUEVO').length;
     const data = FUENTES.map(f=>{
       const frows = rows.filter(g=>g[1]===f);
       const counts = ETAPAS.map(([et])=> frows.filter(g=>g[3]===et).length);
@@ -466,7 +466,7 @@
     }).sort((a,b)=> b.total-a.total || a.fuente.localeCompare(b.fuente));
     const totals = ETAPAS.map((_,i)=> data.reduce((s,r)=>s+r.counts[i],0));
     const grandTotal = totals.reduce((a,b)=>a+b,0);
-    return {data, totals, grandTotal, nuevoCount};
+    return {data, totals, grandTotal};
   }
 
   function buildFunnelHTML(levels){
@@ -639,7 +639,7 @@
     });
     body += '<tr class="tot"><td>TOTAL</td>'+fe.totals.map(c=>'<td>'+fmtInt(c)+'</td>').join('')+'<td>'+fmtInt(fe.grandTotal)+'</td></tr>';
     document.getElementById('feBody').innerHTML = body;
-    document.getElementById('feNote').textContent = 'Incluye todas las oportunidades del pipeline COMPRADORES agrupadas por Fuente, creadas dentro de la ventana seleccionada. Las columnas son las 8 etapas del board de COMPRADORES en GHL, en orden de embudo. Una oportunidad en una etapa que no figure como columna no se cuenta en esta tabla.';
+    document.getElementById('feNote').textContent = 'Incluye todas las oportunidades del pipeline COMPRADORES agrupadas por Fuente, creadas dentro de la ventana seleccionada. Las columnas son las 9 etapas del board de COMPRADORES en GHL, siempre visibles y en el orden del board. Una oportunidad en una etapa que no figure como columna no se cuenta en esta tabla.';
   }
 
   let chartInstances = {};
