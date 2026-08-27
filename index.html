@@ -147,6 +147,10 @@
       </div>
     </div>
 
+    <div class="ct" style="margin-top:26px">Leads creados por d&iacute;a y fuente &middot; Pipeline COMPRADORES</div>
+    <div class="chart-box" style="height:340px"><canvas id="chartFuenteDia" role="img" aria-label="Leads creados por dia, apilados por fuente, con linea de costo por lead">Grafico de barras apiladas: leads creados por dia segun fuente, con linea de costo por lead en el eje derecho.</canvas></div>
+    <div class="sn">Barras apiladas = oportunidades del pipeline COMPRADORES creadas ese d&iacute;a (fecha <em>Creado</em> convertida a calendario de Chile), agrupadas con el mismo criterio de <em>FUENTE_ALIAS</em> que la tabla de arriba, por lo que los totales cuadran. L&iacute;nea = costo por lead del d&iacute;a: gasto total de Meta (META-REEL + META-TOUR + Lead Magnets) dividido por el total de leads de ese d&iacute;a, sin importar la fuente &mdash; es el costo de adquisici&oacute;n <em>blended</em>, no el costo de la pauta por s&iacute; sola. Un d&iacute;a sin gasto o sin leads no dibuja punto de l&iacute;nea.</div>
+
   </div>
 
   <div class="section-block">
@@ -277,6 +281,19 @@
       <tbody id="o3Body"></tbody>
     </table>
     <div class="sn">*WSP GHL (META-TOUR), Leads Visita, Leads P. Visita, Costo/Visita y Costo P. Visita son datos de GHL a nivel de Buyer &mdash; no existe granularidad por anuncio individual en GHL, por eso estos 5 valores se repiten en cada fila de anuncio del mismo Buyer (marcados con *) y aparecen una sola vez, sin repetir, en la fila de TOTAL de ese Buyer. Leads P. Visita = oportunidades del pipeline COMPRADORES con Fuente=META-TOUR y tag &quot;post_visita&quot;. D&iacute;as Activo = d&iacute;as desde el primer registro del anuncio en el hist&oacute;rico de datos hasta Ayer (proxy de la fecha de creaci&oacute;n real en Meta, que el Sheet no trae); no aplica a las filas de TOTAL.</div>
+
+    <div class="ct">Evoluci&oacute;n diaria por Buyer</div>
+    <div class="chart-grid">
+      <div>
+        <div class="chart-col-title"><span class="chip bp-rf">RF</span>&nbsp; Regional Frecuente</div>
+        <div class="chart-box"><canvas id="chartTourRF" role="img" aria-label="Resultados diarios y costo por resultado en Tour, Regional Frecuente">Grafico de barras y linea: resultados diarios y costo por resultado de Tour para Regional Frecuente.</canvas></div>
+      </div>
+      <div>
+        <div class="chart-col-title"><span class="chip bp-eu">EU</span>&nbsp; Ejecutivo Urbano</div>
+        <div class="chart-box"><canvas id="chartTourEU" role="img" aria-label="Resultados diarios y costo por resultado en Tour, Ejecutivo Urbano">Grafico de barras y linea: resultados diarios y costo por resultado de Tour para Ejecutivo Urbano.</canvas></div>
+      </div>
+    </div>
+
   </div>
 
   <div class="section-block">
@@ -759,6 +776,21 @@
       buildComboChart('chart'+p, labels, counts, costs, 'Resultados', 'Costo/Resultado');
     });
 
+    // Evolucion diaria de Tour (pedido explicito 27-ago-2026): mismo combo barras+linea que el
+    // de META-REEL, pero alimentado por RAW.o3. Ojo: Tour arranco el 23/ago/2026, asi que en
+    // ventanas largas la mayoria de los dias van en cero — es dato real, no un bug de render.
+    ['RF','EU'].forEach(p=>{
+      const counts = [], costs = [];
+      days.forEach(day=>{
+        const rows = (RAW.o3||[]).filter(r=>r[1]===p && r[0]===day);
+        const gasto = rows.reduce((s,r)=>s+r[3],0);
+        const res = rows.reduce((s,r)=>s+r[10],0);
+        counts.push(res);
+        costs.push(res? +(gasto/res).toFixed(2) : null);
+      });
+      buildComboChart('chartTour'+p, labels, counts, costs, 'Resultados', 'Costo/Resultado');
+    });
+
     ['LM1','LM2'].forEach(lm=>{
       const counts = [], costs = [];
       days.forEach(day=>{
@@ -779,6 +811,98 @@
   // de las filas trae null. No se filtra por tag ni se infiere nada — si el campo viene vacío
   // en una oportunidad DESCARTADO (no debería pasar, pero por si acaso), se agrupa como
   // "(sin dato)" en vez de excluirla en silencio.
+  // Grafico "Leads creados por dia y fuente" (pedido explicito 27-ago-2026). Barras apiladas por
+  // fuente + linea de costo por lead en el eje derecho. Usa el mismo normFuente/FUENTE_ALIAS que la
+  // tabla Fuente x Etapa, asi que los totales de las dos vistas cuadran. Las oportunidades sin
+  // fuente no se descartan: van a su propia serie gris.
+  const FUENTE_COLORS = {
+    'META-REEL':  '#378ADD',
+    'META-LM':    '#7FB3E8',
+    'META-TOUR':  '#1D4E89',
+    'META-DM':    '#A8CDF0',
+    'DIRECTO':    '#4C9A6A',
+    'FORM-WEB':   '#E0A93B',
+    'CORREO':     '#9B6BB5',
+    'TOCTOC':     '#C4685F',
+    '(sin fuente)': '#B8B4AC'
+  };
+  const SIN_FUENTE = '(sin fuente)';
+
+  function computeFuenteDia(range){
+    const days = dateRangeArray(range.start, range.end);
+    // Gasto diario de Meta: los tres bloques de pauta juntos (Reel, Tour, Lead Magnets).
+    const gastoDia = {};
+    days.forEach(d=> gastoDia[d] = 0);
+    RAW.o1.forEach(r=>{ if(gastoDia[r[0]] !== undefined) gastoDia[r[0]] += r[3]; });
+    (RAW.o3||[]).forEach(r=>{ if(gastoDia[r[0]] !== undefined) gastoDia[r[0]] += r[3]; });
+    RAW.o2.forEach(r=>{ if(gastoDia[r[0]] !== undefined) gastoDia[r[0]] += r[2]; });
+
+    // Leads por dia y fuente, con la fecha de GHL convertida a calendario de Chile.
+    const porDia = {};
+    days.forEach(d=> porDia[d] = {});
+    RAW.ghl_opp.forEach(g=>{
+      if(!g[0]) return;
+      const d = ghlDateChile(g[0]);
+      if(porDia[d] === undefined) return;
+      const f = g[1] ? (normFuente(g[1]) || SIN_FUENTE) : SIN_FUENTE;
+      porDia[d][f] = (porDia[d][f] || 0) + 1;
+    });
+
+    // Solo se dibujan las fuentes con al menos 1 lead en la ventana, ordenadas por volumen
+    // descendente para que la mas grande quede abajo en la pila.
+    const totalPorFuente = {};
+    days.forEach(d=>{ for(const f in porDia[d]) totalPorFuente[f] = (totalPorFuente[f]||0) + porDia[d][f]; });
+    const fuentes = Object.keys(totalPorFuente).sort((a,b)=> totalPorFuente[b]-totalPorFuente[a]);
+
+    const series = fuentes.map(f=> ({ fuente:f, data: days.map(d=> porDia[d][f] || 0) }));
+    const totales = days.map(d=> Object.values(porDia[d]).reduce((s,v)=>s+v,0));
+    const costo = days.map((d,i)=>{
+      const g = gastoDia[d], l = totales[i];
+      return (l > 0 && g > 0) ? +(g/l).toFixed(2) : null;
+    });
+    return {days, series, totales, costo, totalPorFuente};
+  }
+
+  function renderFuenteDia(fd){
+    const labels = fd.days.map(fmtShort);
+    const datasets = fd.series.map(s=>({
+      type:'bar', label:s.fuente, data:s.data,
+      backgroundColor: FUENTE_COLORS[s.fuente] || '#B8B4AC',
+      stack:'leads', yAxisID:'y', order:2
+    }));
+    datasets.push({
+      type:'line', label:'Costo/Lead', data:fd.costo,
+      borderColor:'#D85A30', backgroundColor:'#D85A30',
+      spanGaps:false, tension:0.25, pointRadius:2, borderWidth:2, yAxisID:'y1', order:1
+    });
+    destroyChart('chartFuenteDia');
+    chartInstances['chartFuenteDia'] = new Chart(document.getElementById('chartFuenteDia'), {
+      data:{labels:labels, datasets:datasets},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        scales:{
+          y:{stacked:true, beginAtZero:true, position:'left', ticks:{font:{size:9}}, title:{display:true, text:'Leads creados', font:{size:9}}, grid:{color:'#e8e6e0'}},
+          y1:{stacked:false, beginAtZero:true, position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:9}, callback:v=>'$'+v}, title:{display:true, text:'Costo/Lead', font:{size:9}}},
+          x:{stacked:true, ticks:{font:{size:8}, maxRotation:45, autoSkip:true}, grid:{display:false}}
+        },
+        plugins:{
+          legend:{display:true, position:'bottom', labels:{boxWidth:10, font:{size:10}}},
+          tooltip:{callbacks:{
+            label:(c)=> c.dataset.label==='Costo/Lead'
+              ? 'Costo/Lead: '+(c.parsed.y===null?'—':'$'+c.parsed.y.toFixed(2))
+              : c.dataset.label+': '+c.parsed.y,
+            footer:(items)=>{
+              const barras = items.filter(i=>i.dataset.type!=='line');
+              const tot = barras.reduce((s,i)=>s+i.parsed.y,0);
+              return barras.length? 'Total del dia: '+tot : '';
+            }
+          }}
+        }
+      }
+    });
+  }
+
   function computeMotivosDescarte(range){
     const {start,end} = range;
     const rows = RAW.ghl_opp.filter(g=> g[3]==='DESCARTADO' && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
@@ -950,6 +1074,7 @@
     renderO3(o3, range);
     renderFuenteEtapa(fe);
     renderMotivosDescarte(mot);
+    renderFuenteDia(computeFuenteDia(range));
     renderCharts(range);
   }
 
