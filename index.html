@@ -464,7 +464,16 @@
         a.gasto+=r[3]; a.impre+=r[4]; a.alcance+=r[5]; a.clicks+=r[6]; a.hook+=r[7]; a.v50+=r[8]; a.v75+=r[9]; a.resultados+=r[10];
         a.activo=true;
       });
-      const ads = Object.values(adsMap).sort((a,b)=> (b.gasto-a.gasto) || a.name.localeCompare(b.name));
+      // Orden de la tabla META-REEL (pedido explicito 27-ago-2026): por Dias Activo de mayor a
+      // menor. Desempate por gasto descendente, y los que no tienen fecha de inicio conocida
+      // (diasActivo null) van al final. La tabla de Tour (computeO3) mantiene el orden por gasto.
+      const ads = Object.values(adsMap).sort((a,b)=>{
+        const da = diasActivo(a.key), db = diasActivo(b.key);
+        if(da === null && db !== null) return 1;
+        if(db === null && da !== null) return -1;
+        if(da !== db) return db - da;
+        return (b.gasto - a.gasto) || a.name.localeCompare(b.name);
+      });
       const sum = (idx)=> prows.reduce((s,r)=>s+r[idx],0);
       const pgasto=sum(3), pimpre=sum(4), palcance=sum(5), phook=sum(7), pv50=sum(8), pv75=sum(9), presultados=sum(10);
       const ghlP = RAW.ghl_opp.filter(g=> g[2]===p && FUENTE_TABLA(g[1]) && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
