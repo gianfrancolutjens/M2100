@@ -459,7 +459,7 @@
     const rows = ALL.filter(r=>r[0]>=start && r[0]<=end);
     const FUENTE_TABLA = (f)=> f==='META-REEL';
     const personas = ['RF','EU'];
-    const totals = {gasto:0,impre:0,alcance:0,hook:0,v50:0,v75:0,resultados:0,wspGhl:0,visitas:0,postVisita:0,postVisitaP:0};
+    const totals = {gasto:0,impre:0,alcance:0,hook:0,v50:0,v75:0,resultados:0,wspGhl:0,visitas:0,postVisita:0,postVisitaP:0,wspGhlF:0,visitasF:0};
     const byPersona = {};
     personas.forEach(p=>{
       const prows = rows.filter(r=>r[1]===p);
@@ -501,7 +501,16 @@
       byPersona[p] = {ads, gasto:pgasto, impre:pimpre, alcance:palcance, hook:phook, v50:pv50, v75:pv75, resultados:presultados, wspGhl, visitas, postVisitaP};
       totals.gasto+=pgasto; totals.impre+=pimpre; totals.alcance+=palcance; totals.hook+=phook; totals.v50+=pv50; totals.v75+=pv75; totals.resultados+=presultados; totals.wspGhl+=wspGhl; totals.visitas+=visitas; totals.postVisitaP+=postVisitaP;
     });
-    totals.postVisita = RAW.ghl_opp.filter(g=> g[1]==='META-REEL' && g[4].includes('post_visita') && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end).length;
+    // Niveles GHL del EMBUDO (unificado 04-sep-2026, pedido explicito): CRM WSP, Visitas y
+    // Post-Visita se cuentan por Fuente=META-REEL SIN filtrar Persona. Antes CRM WSP y Visitas
+    // se sumaban desde byPersona (solo RF/EU) mientras Post-Visita ya contaba por fuente, asi
+    // que un lead sin Persona asignada desaparecia de dos niveles y reaparecia en el tercero
+    // — con el riesgo de mostrar Post-Visita > Visitas. Los campos wspGhl/visitas/postVisitaP
+    // (a nivel de Buyer) NO se tocan: siguen alimentando la tabla y sus columnas de costo.
+    const ghlF = RAW.ghl_opp.filter(g=> g[1]==='META-REEL' && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
+    totals.wspGhlF   = ghlF.length;
+    totals.visitasF  = ghlF.filter(g=>g[4].includes('visita')).length;
+    totals.postVisita = ghlF.filter(g=>g[4].includes('post_visita')).length;
     return {byPersona, totals};
   }
 
@@ -509,7 +518,7 @@
     const {start,end} = range;
     const rows = RAW.o2.filter(r=>r[0]>=start && r[0]<=end);
     const lms = ['LM1','LM2'];
-    const totals = {gasto:0,impre:0,alcance:0,clicks:0,hook:0,v50:0,v75:0,leads:0,lmGhl:0,contacto:0,visitas:0,postVisita:0,postVisitaLM:0};
+    const totals = {gasto:0,impre:0,alcance:0,clicks:0,hook:0,v50:0,v75:0,leads:0,lmGhl:0,contacto:0,visitas:0,postVisita:0,postVisitaLM:0,visitasF:0};
     const byLM = {};
     lms.forEach(lm=>{
       const lrows = rows.filter(r=>r[1]===lm);
@@ -536,7 +545,14 @@
     // Nivel 8 del embudo (pedido explicito 07-ago-2026): oportunidades del pipeline
     // COMPRADORES con Fuente=META-LM y tag "post_visita". No se separa por LM1/LM2 (la
     // Fuente en GHL ya viene como "META-LM" generico, sin distinguir el LM especifico).
-    totals.postVisita = RAW.ghl_opp.filter(g=> normFuente(g[1])==='META-LM' && g[4].includes('post_visita') && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end).length;
+    // Unificado 04-sep-2026 (mismo criterio que el embudo O1): el tramo COMPRADORES del
+    // embudo (Visitas y Post-Visita) se cuenta por Fuente=META-LM, no por el subconjunto
+    // etiquetado lm1/lm2 que alimenta la columna "Visitas" de la tabla. Asi los dos niveles
+    // consecutivos salen del mismo universo. totals.visitas (por tag lm1/lm2) se mantiene
+    // intacto para la tabla.
+    const ghlLMF = RAW.ghl_opp.filter(g=> normFuente(g[1])==='META-LM' && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
+    totals.visitasF  = ghlLMF.filter(g=>g[4].includes('visita')).length;
+    totals.postVisita = ghlLMF.filter(g=>g[4].includes('post_visita')).length;
     return {byLM, totals};
   }
 
@@ -608,7 +624,7 @@
       '<div class="k"><div class="kl">Gasto total</div><div class="kv">'+fmtMoney(t.gasto)+'</div><div class="ks2">RF '+fmtMoney(o1.byPersona.RF.gasto)+' · EU '+fmtMoney(o1.byPersona.EU.gasto)+'</div></div>'
     + '<div class="k"><div class="kl">Resultados totales</div><div class="kv">'+fmtInt(t.resultados)+'</div><div class="ks2">Conversaciones WhatsApp</div></div>'
     + '<div class="k"><div class="kl">Costo/Resultado prom.</div><div class="kv">'+(t.resultados? fmtMoney(t.gasto/t.resultados):'Indet')+'</div><div class="ks2">RF '+(o1.byPersona.RF.resultados?fmtMoney(o1.byPersona.RF.gasto/o1.byPersona.RF.resultados):'Indet')+' · EU '+(o1.byPersona.EU.resultados?fmtMoney(o1.byPersona.EU.gasto/o1.byPersona.EU.resultados):'Indet')+'</div></div>'
-    + '<div class="k"><div class="kl">Leads Visita (GHL)</div><div class="kv">'+fmtInt(t.visitas)+'</div><div class="ks2">de '+fmtInt(t.wspGhl)+' leads Meta-Reel</div></div>';
+    + '<div class="k"><div class="kl">Leads Visita (GHL)</div><div class="kv">'+fmtInt(t.visitas)+'</div><div class="ks2">de '+fmtInt(t.wspGhl)+' leads Meta-Reel con Buyer asignado</div></div>';
 
     function adRow(a,p){
       const da = diasActivo(a.key);
@@ -657,12 +673,12 @@
       {label:'Vio 50%+', value:t.v50},
       {label:'Vio 75%+', value:t.v75},
       {label:'META WSP', value:t.resultados, extra:'Costo/Conversión '+(t.resultados? fmtMoney(t.gasto/t.resultados):'Indet')},
-      {label:'CRM WSP', value:t.wspGhl},
-      {label:'Visitas', value:t.visitas, extra:'Costo/Visita '+(t.visitas? fmtMoney(t.gasto/t.visitas):'Indet')},
+      {label:'CRM WSP', value:t.wspGhlF},
+      {label:'Visitas', value:t.visitasF, extra:'Costo/Visita '+(t.visitasF? fmtMoney(t.gasto/t.visitasF):'Indet')},
       {label:'Post-Visita', value:t.postVisita}
     ];
     document.getElementById('funnelBarsO1').innerHTML = buildFunnelHTML(levels);
-    document.getElementById('funnelCaptionO1').innerHTML = 'Ancho a escala log10, salvo Visitas y Post-Visita: ancho fijo para que siempre se vean legibles independiente del valor. Incluye todas las campanas de fuente META-REEL (Interaccion + Ventas). Post-Visita = oportunidades Fuente=META-REEL con tag "post_visita" en GHL.';
+    document.getElementById('funnelCaptionO1').innerHTML = 'Ancho a escala log10, salvo Visitas y Post-Visita: ancho fijo para que siempre se vean legibles independiente del valor. Incluye todas las campanas de fuente META-REEL (Interaccion + Ventas). CRM WSP, Visitas y Post-Visita = oportunidades Fuente=META-REEL en la ventana (con tag "visita" / "post_visita" respectivamente), contadas SIN filtrar Persona — por eso pueden superar a las columnas equivalentes de la tabla, que se calculan por Buyer y dejan fuera los leads sin RF/EU asignado.';
   }
 
   function renderO2(o2, range){
@@ -716,11 +732,11 @@
       {label:'Vio 75%+', value:t.v75},
       {label:'Descargas META', value:t.leads, extra:'Costo/Conversión '+(t.leads? fmtMoney(t.gasto/t.leads):'Indet')},
       {label:'Descargas GHL', value:t.lmGhl},
-      {label:'Visitas', value:t.visitas, extra:'Costo/Visita '+(t.visitas? fmtMoney(t.gasto/t.visitas):'Indet')},
+      {label:'Visitas', value:t.visitasF, extra:'Costo/Visita '+(t.visitasF? fmtMoney(t.gasto/t.visitasF):'Indet')},
       {label:'Post-Visita', value:t.postVisita}
     ];
     document.getElementById('funnelBarsO2').innerHTML = buildFunnelHTML(levels);
-    let cap2 = 'Ancho a escala log10, salvo Visitas y Post-Visita: ancho fijo para que siempre se vean aunque el valor real sea 0. Post-Visita = oportunidades Fuente=META-LM con tag "post_visita" en GHL.';
+    let cap2 = 'Ancho a escala log10, salvo Visitas y Post-Visita: ancho fijo para que siempre se vean aunque el valor real sea 0. Visitas y Post-Visita = oportunidades Fuente=META-LM con tag "visita" / "post_visita" en GHL, contadas SIN filtrar Persona ni el tag lm1/lm2 — por eso pueden diferir de la columna Visitas de la tabla, que se calcula sobre el subconjunto etiquetado lm1/lm2.';
     if(t.lmGhl > t.leads){ cap2 += ' Descargas GHL ('+fmtInt(t.lmGhl)+') supera levemente a Descargas META ('+fmtInt(t.leads)+') — ventanas de atribución distintas, no es error de calculo.'; }
     document.getElementById('funnelCaptionO2').innerHTML = cap2;
   }
