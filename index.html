@@ -342,8 +342,40 @@
   // Fecha "ancla" (hoy, desde la perspectiva del Sheet) = la fecha mas reciente que aparece en
   // los datos de Meta (o1/o2). Se calcula del RAW, nunca se hardcodea, para que el reporte no
   // quede congelado en la fecha del dia que se genero el template. Ver Paso 5A del skill.
+  // GEN_DATE: fecha calendario en que se genero el reporte. Se deriva del texto
+  // "Generado: d mmm yyyy" del header, que la corrida diaria ya reescribe en cada publicacion,
+  // asi que no agrega un marcador nuevo que haya que mantener sincronizado aparte.
+  function computeGenDate(){
+    try{
+      const el = document.querySelector('.hm');
+      if(!el) return null;
+      const m = el.textContent.match(/Generado:\s*(\d{1,2})\s+([A-Za-zÁÉÍÓÚáéíóú]{3})[A-Za-z]*\s+(\d{4})/);
+      if(!m) return null;
+      const mi = MESES.indexOf(m[2].toLowerCase().slice(0,3));
+      if(mi < 0) return null;
+      return m[3]+'-'+String(mi+1).padStart(2,'0')+'-'+String(Number(m[1])).padStart(2,'0');
+    }catch(e){ return null; }
+  }
+
+  // ANCHOR = "hoy" desde la perspectiva del reporte; todas las ventanas terminan en ANCHOR-1,
+  // porque el dia en curso siempre esta incompleto (el pipeline corre ~2:30am).
+  // Se toma el MAXIMO entre: la fecha de generacion, las fechas de Meta, y las de GHL (en
+  // calendario de Chile). Antes solo miraba Meta (o1+o2), y eso congelaba el reporte cuando la
+  // pauta estaba pausada: sin gasto, Meta no devuelve filas del dia en curso, el ancla retrocedia
+  // y un dia completo quedaba fuera de las seis ventanas aunque GHL siguiera generando leads.
+  // Caso real: 8-sep-2026, campanas pausadas a proposito, el reporte se quedo mostrando el 6.
   function computeAnchor(){
     const dates = RAW.o1.map(r=>r[0]).concat(RAW.o2.map(r=>r[0]));
+    const pushGhl = arr => (arr||[]).forEach(g=>{
+      if(!g || !g[0]) return;
+      try{
+        const d = ghlDateChile(g[0]);
+        if(/^\d{4}-\d{2}-\d{2}$/.test(d)) dates.push(d);
+      }catch(e){}
+    });
+    pushGhl(RAW.ghl_opp); pushGhl(RAW.ghl_lm);
+    const gen = computeGenDate();
+    if(gen) dates.push(gen);
     if(!dates.length) return null;
     return dates.reduce((a,b)=> a>b?a:b);
   }
