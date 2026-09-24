@@ -106,7 +106,7 @@
     <div class="section-sub" id="frSub"></div>
 
     <table>
-      <colgroup><col style="width:16%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"></colgroup>
+      <colgroup><col style="width:16%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"></colgroup>
       <thead>
         <tr>
           <th style="text-align:left">Fuente</th>
@@ -119,16 +119,14 @@
           <th>Vis<br>75%+</th>
           <th>Resultados</th>
           <th>WSP<br>GHL</th>
-          <th>Leads<br>Visita</th>
-          <th>Leads<br>P. Visita</th>
+          <th>Leads<br>Calificados</th>
           <th>Costo/<br>Resultado</th>
-          <th>Costo/<br>Visita</th>
-          <th>Costo<br>P. Visita</th>
+          <th>Costo/<br>Calificado</th>
         </tr>
       </thead>
       <tbody id="frBody"></tbody>
     </table>
-    <div class="sn">Una fila por fuente (Meta-REEL, Meta-Tour, Meta-LM = LM1+LM2 combinados, IVA), sin desglose por Buyer ni por anuncio. Resultados = Conversaciones WhatsApp para Reel/Tour/IVA, Leads (Meta) para LM. WSP GHL, Leads Visita y Leads P. Visita = oportunidades del pipeline COMPRADORES con esa Fuente en la ventana seleccionada (tag &quot;visita&quot; / &quot;post_visita&quot; respectivamente), sin filtrar Persona. Solo incluye fuentes con datos de Meta Ads &mdash; las fuentes org&aacute;nicas (Directo, Form-Web, Correo, TocToc) siguen en la tabla Fuente &times; Etapa de abajo.</div>
+    <div class="sn">Una fila por fuente (Meta-REEL, Meta-Tour, Meta-LM = LM1+LM2 combinados, IVA), sin desglose por Buyer ni por anuncio. Resultados = Conversaciones WhatsApp para Reel/Tour/IVA, Leads (Meta) para LM. WSP GHL = oportunidades del pipeline COMPRADORES con esa Fuente en la ventana seleccionada, sin filtrar Persona. Leads Calificados = subconjunto de WSP GHL con al menos una de las etiquetas &quot;para_caro&quot;, &quot;visita&quot; o &quot;post_visita&quot; (cada lead cuenta una sola vez, sin importar cu&aacute;ntas de esas etiquetas tenga). Costo/Calificado = Gasto / Leads Calificados. Solo incluye fuentes con datos de Meta Ads &mdash; las fuentes org&aacute;nicas (Directo, Form-Web, Correo, TocToc) siguen en la tabla Fuente &times; Etapa de abajo.</div>
 
     <div class="ct">Oportunidades por Fuente y Etapa &middot; Pipeline COMPRADORES</div>
     <div class="fe-grid">
@@ -1249,11 +1247,12 @@
     rows.forEach(d=>{
       const ghlF = RAW.ghl_opp.filter(g=> normFuente(g[1])===d.fuente && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
       d.wspGhl = ghlF.length;
-      d.visitas = ghlF.filter(g=>g[4].includes('visita')).length;
-      d.postVisita = ghlF.filter(g=>g[4].includes('post_visita')).length;
+      // Leads Calificados (pedido explicito 24-sep-2026): union de las etiquetas para_caro /
+      // visita / post_visita — cada lead cuenta una sola vez aunque tenga mas de una de las tres.
+      d.calificados = ghlF.filter(g=> g[4].includes('para_caro') || g[4].includes('visita') || g[4].includes('post_visita')).length;
     });
     rows.sort((a,b)=> b.gasto-a.gasto);
-    const keys = ['gasto','impre','alcance','hook','v50','v75','resultados','wspGhl','visitas','postVisita'];
+    const keys = ['gasto','impre','alcance','hook','v50','v75','resultados','wspGhl','calificados'];
     const totals = {};
     keys.forEach(k=> totals[k] = rows.reduce((s,d)=>s+d[k],0));
     return {rows, totals};
@@ -1268,10 +1267,9 @@
         + '<td>'+fmtMoney(d.impre? d.gasto/d.impre*1000:0)+'</td>'
         + '<td>'+fmtPctAdaptive(d.impre? d.hook/d.impre:0)+'</td><td>'+fmtPctAdaptive(d.impre? d.v50/d.impre:0)+'</td><td>'+fmtPctAdaptive(d.impre? d.v75/d.impre:0)+'</td>'
         + '<td>'+fmtInt(d.resultados)+'</td>'
-        + '<td>'+fmtInt(d.wspGhl)+'</td><td>'+fmtInt(d.visitas)+'</td><td>'+fmtInt(d.postVisita)+'</td>'
+        + '<td>'+fmtInt(d.wspGhl)+'</td><td>'+fmtInt(d.calificados)+'</td>'
         + moneyOrIndetTd(d.gasto,d.resultados)
-        + moneyOrIndetTd(d.gasto,d.visitas)
-        + moneyOrIndetTd(d.gasto,d.postVisita)
+        + moneyOrIndetTd(d.gasto,d.calificados)
         + '</tr>';
     }
     let body = fr.rows.map(row).join('');
