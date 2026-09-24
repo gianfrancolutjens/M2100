@@ -106,7 +106,7 @@
     <div class="section-sub" id="frSub"></div>
 
     <table>
-      <colgroup><col style="width:16%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"><col style="width:7%"></colgroup>
+      <colgroup><col style="width:16%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"><col style="width:6.46%"></colgroup>
       <thead>
         <tr>
           <th style="text-align:left">Fuente</th>
@@ -120,13 +120,14 @@
           <th>Resultados</th>
           <th>WSP<br>GHL</th>
           <th>Leads<br>Calificados</th>
+          <th>%<br>Calificado</th>
           <th>Costo/<br>Resultado</th>
           <th>Costo/<br>Calificado</th>
         </tr>
       </thead>
       <tbody id="frBody"></tbody>
     </table>
-    <div class="sn">Una fila por fuente (Meta-REEL, Meta-Tour, Meta-LM = LM1+LM2 combinados, IVA), sin desglose por Buyer ni por anuncio. Resultados = Conversaciones WhatsApp para Reel/Tour/IVA, Leads (Meta) para LM. WSP GHL = oportunidades del pipeline COMPRADORES con esa Fuente en la ventana seleccionada, sin filtrar Persona. Leads Calificados = subconjunto de WSP GHL con al menos una de las etiquetas &quot;para_caro&quot;, &quot;visita&quot; o &quot;post_visita&quot; (cada lead cuenta una sola vez, sin importar cu&aacute;ntas de esas etiquetas tenga). Costo/Calificado = Gasto / Leads Calificados. Solo incluye fuentes con datos de Meta Ads &mdash; las fuentes org&aacute;nicas (Directo, Form-Web, Correo, TocToc) siguen en la tabla Fuente &times; Etapa de abajo.</div>
+    <div class="sn">Una fila por fuente (Meta-REEL, Meta-Tour, Meta-LM = LM1+LM2 combinados, IVA), sin desglose por Buyer ni por anuncio. Resultados = Conversaciones WhatsApp para Reel/Tour/IVA, Leads (Meta) para LM. WSP GHL = oportunidades del pipeline COMPRADORES con esa Fuente en la ventana seleccionada, sin filtrar Persona. Leads Calificados = subconjunto de WSP GHL con al menos una de las etiquetas &quot;para_caro&quot;, &quot;visita&quot; o &quot;post_visita&quot; (cada lead cuenta una sola vez, sin importar cu&aacute;ntas de esas etiquetas tenga). % Calificado = Leads Calificados / Resultados &mdash; puede superar el 100% porque Resultados es un conteo de Meta (conversaciones/leads) y Leads Calificados es un conteo de GHL, con ventanas de atribuci&oacute;n distintas. Costo/Calificado = Gasto / Leads Calificados. Solo incluye fuentes con datos de Meta Ads &mdash; las fuentes org&aacute;nicas (Directo, Form-Web, Correo, TocToc) siguen en la tabla Fuente &times; Etapa de abajo.</div>
 
     <div class="ct">Oportunidades por Fuente y Etapa &middot; Pipeline COMPRADORES</div>
     <div class="fe-grid">
@@ -1268,6 +1269,7 @@
         + '<td>'+fmtPctAdaptive(d.impre? d.hook/d.impre:0)+'</td><td>'+fmtPctAdaptive(d.impre? d.v50/d.impre:0)+'</td><td>'+fmtPctAdaptive(d.impre? d.v75/d.impre:0)+'</td>'
         + '<td>'+fmtInt(d.resultados)+'</td>'
         + '<td>'+fmtInt(d.wspGhl)+'</td><td>'+fmtInt(d.calificados)+'</td>'
+        + '<td>'+fmtPctAdaptive(d.resultados? d.calificados/d.resultados:0)+'</td>'
         + moneyOrIndetTd(d.gasto,d.resultados)
         + moneyOrIndetTd(d.gasto,d.calificados)
         + '</tr>';
