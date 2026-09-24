@@ -102,21 +102,33 @@
     </div>
 
   <div class="section-block">
-    <div class="section-title">Embudos de conversi&oacute;n</div>
-    <div class="section-sub">Objetivo 1 (Interacci&oacute;n) y Objetivo 2 (Lead Magnets) &middot; ambos buyers / ambos LM combinados</div>
+    <div class="section-title">Resumen por Fuente &middot; Meta Ads</div>
+    <div class="section-sub" id="frSub"></div>
 
-    <div class="funnel-grid">
-      <div>
-        <div class="funnel-col-title">Interacci&oacute;n &mdash; RF + EU</div>
-        <div id="funnelBarsO1"></div>
-        <div class="funnel-caption" id="funnelCaptionO1"></div>
-      </div>
-      <div>
-        <div class="funnel-col-title">Lead Magnets &mdash; LM1 + LM2</div>
-        <div id="funnelBarsO2"></div>
-        <div class="funnel-caption" id="funnelCaptionO2"></div>
-      </div>
-    </div>
+    <table>
+      <colgroup><col style="width:16%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:6%"></colgroup>
+      <thead>
+        <tr>
+          <th style="text-align:left">Fuente</th>
+          <th>Gasto</th>
+          <th>IMPRE</th>
+          <th>FREQ</th>
+          <th>CPM</th>
+          <th>Hook<br>Rate</th>
+          <th>Vis<br>50%+</th>
+          <th>Vis<br>75%+</th>
+          <th>Resultados</th>
+          <th>WSP<br>GHL</th>
+          <th>Leads<br>Visita</th>
+          <th>Leads<br>P. Visita</th>
+          <th>Costo/<br>Resultado</th>
+          <th>Costo/<br>Visita</th>
+          <th>Costo<br>P. Visita</th>
+        </tr>
+      </thead>
+      <tbody id="frBody"></tbody>
+    </table>
+    <div class="sn">Una fila por fuente (Meta-REEL, Meta-Tour, Meta-LM = LM1+LM2 combinados, IVA), sin desglose por Buyer ni por anuncio. Resultados = Conversaciones WhatsApp para Reel/Tour/IVA, Leads (Meta) para LM. WSP GHL, Leads Visita y Leads P. Visita = oportunidades del pipeline COMPRADORES con esa Fuente en la ventana seleccionada (tag &quot;visita&quot; / &quot;post_visita&quot; respectivamente), sin filtrar Persona. Solo incluye fuentes con datos de Meta Ads &mdash; las fuentes org&aacute;nicas (Directo, Form-Web, Correo, TocToc) siguen en la tabla Fuente &times; Etapa de abajo.</div>
 
     <div class="ct">Oportunidades por Fuente y Etapa &middot; Pipeline COMPRADORES</div>
     <div class="fe-grid">
@@ -658,46 +670,6 @@
     return {data, totals, grandTotal};
   }
 
-  function buildFunnelHTML(levels){
-    const v1 = levels[0].value;
-    const colors = [
-      {bg:'#E6F1FB',fg:'#0C447C'},{bg:'#B5D4F4',fg:'#0C447C'},{bg:'#85B7EB',fg:'#042C53'},
-      {bg:'#378ADD',fg:'#E6F1FB'},{bg:'#185FA5',fg:'#E6F1FB'},{bg:'#0C447C',fg:'#E6F1FB'},
-      {bg:'#042C53',fg:'#E6F1FB'},{bg:'#021F3D',fg:'#E6F1FB'}
-    ];
-    // Niveles 1-6 (indices 0-5) a escala log10 sobre el nivel 1. Niveles 7+ (Visitas,
-    // Post-Visita, ...) nunca usan esa formula — ancho fijo decreciente para que siempre
-    // se vean legibles aunque el valor real sea 0 (mismo criterio que Visitas ya tenia,
-    // extendido genericamente a cualquier nivel adicional que se agregue despues).
-    const LOG_LEVELS = 6;
-    let widths = levels.slice(0, LOG_LEVELS).map(l=>{
-      if(v1<=0) return 20;
-      return Math.round(Math.log10(l.value+1)/Math.log10(v1+1)*100);
-    });
-    widths[0] = 100;
-    widths = widths.map(w=>Math.max(w,15));
-    for(let i=LOG_LEVELS; i<levels.length; i++){
-      const floor = Math.max(20 - (i-LOG_LEVELS)*2, 12);
-      widths.push(Math.max(floor, widths[i-1]-8));
-    }
-
-    let html='';
-    levels.forEach((lvl,i)=>{
-      const pctTotal = v1>0? lvl.value/v1 : 0;
-      let sub;
-      if(i===0){ sub = '100% del total'; }
-      else{
-        const prev = levels[i-1].value;
-        const pctPrev = prev>0? lvl.value/prev : 0;
-        sub = fmtPctAdaptive(pctTotal)+' del total &middot; '+fmtPctAdaptive(pctPrev)+' del paso anterior';
-      }
-      if(lvl.extra) sub += ' &middot; '+lvl.extra;
-      html += '<div class="funnel-bar" style="width:'+widths[i]+'%;background:'+colors[i].bg+';color:'+colors[i].fg+'">'
-            + '<div class="fl">'+lvl.label+'</div><div class="fv">'+fmtInt(lvl.value)+'</div><div class="fs">'+sub+'</div></div>';
-    });
-    return html;
-  }
-
   function renderO1(o1, range){
     const t = o1.totals;
     document.getElementById('o1Sub').textContent = 'Fuente META-REEL · todos los objetivos de campana (Interaccion + Ventas) · una fila por anuncio x objetivo · Por Buyer Persona · '+fmtLong(range.start)+' – '+fmtLong(range.end)+' ('+range.days+' dias)';
@@ -749,19 +721,6 @@
     body += totRow('TOTAL EJECUTIVO URBANO', o1.byPersona.EU);
     body += totRow('TOTAL GENERAL', t);
     document.getElementById('o1Body').innerHTML = body;
-
-    const levels = [
-      {label:'Impresiones', value:t.impre, extra:'Importe '+fmtMoney(t.gasto)},
-      {label:'Vio +3s (hook)', value:t.hook},
-      {label:'Vio 50%+', value:t.v50},
-      {label:'Vio 75%+', value:t.v75},
-      {label:'META WSP', value:t.resultados, extra:'Costo/Conversión '+(t.resultados? fmtMoney(t.gasto/t.resultados):'Indet')},
-      {label:'CRM WSP', value:t.wspGhlF},
-      {label:'Visitas', value:t.visitasF, extra:'Costo/Visita '+(t.visitasF? fmtMoney(t.gasto/t.visitasF):'Indet')},
-      {label:'Post-Visita', value:t.postVisita}
-    ];
-    document.getElementById('funnelBarsO1').innerHTML = buildFunnelHTML(levels);
-    document.getElementById('funnelCaptionO1').innerHTML = 'Ancho a escala log10, salvo Visitas y Post-Visita: ancho fijo para que siempre se vean legibles independiente del valor. Incluye todas las campanas de fuente META-REEL (Interaccion + Ventas). CRM WSP, Visitas y Post-Visita = oportunidades Fuente=META-REEL en la ventana (con tag "visita" / "post_visita" respectivamente), contadas SIN filtrar Persona — por eso pueden superar a las columnas equivalentes de la tabla, que se calculan por Buyer y dejan fuera los leads sin RF/EU asignado.';
   }
 
   function renderO2(o2, range){
@@ -807,21 +766,6 @@
     body += lmRow('LM2', o2.byLM.LM2, 'bp-eu', 'EU', 'Brochure');
     body += totRow2(t);
     document.getElementById('o2Body').innerHTML = body;
-
-    const levels = [
-      {label:'Impresiones', value:t.impre, extra:'Importe '+fmtMoney(t.gasto)},
-      {label:'Vio +3s', value:t.hook},
-      {label:'Vio 50%+', value:t.v50},
-      {label:'Vio 75%+', value:t.v75},
-      {label:'Descargas META', value:t.leads, extra:'Costo/Conversión '+(t.leads? fmtMoney(t.gasto/t.leads):'Indet')},
-      {label:'Descargas GHL', value:t.lmGhl},
-      {label:'Visitas', value:t.visitasF, extra:'Costo/Visita '+(t.visitasF? fmtMoney(t.gasto/t.visitasF):'Indet')},
-      {label:'Post-Visita', value:t.postVisita}
-    ];
-    document.getElementById('funnelBarsO2').innerHTML = buildFunnelHTML(levels);
-    let cap2 = 'Ancho a escala log10, salvo Visitas y Post-Visita: ancho fijo para que siempre se vean aunque el valor real sea 0. Visitas y Post-Visita = oportunidades Fuente=META-LM con tag "visita" / "post_visita" en GHL, contadas SIN filtrar Persona ni el tag lm1/lm2 — por eso pueden diferir de la columna Visitas de la tabla, que se calcula sobre el subconjunto etiquetado lm1/lm2.';
-    if(t.lmGhl > t.leads){ cap2 += ' Descargas GHL ('+fmtInt(t.lmGhl)+') supera levemente a Descargas META ('+fmtInt(t.leads)+') — ventanas de atribución distintas, no es error de calculo.'; }
-    document.getElementById('funnelCaptionO2').innerHTML = cap2;
   }
 
   function renderFuenteEtapa(fe){
@@ -1278,6 +1222,63 @@
     document.getElementById('o4Body').innerHTML = body;
   }
 
+  // ===== Resumen por Fuente (agregado 24-sep-2026, pedido explicito) =====
+  // Reemplaza los embudos O1/O2 de arriba: una fila por fuente con datos de Meta Ads
+  // (Meta-REEL, Meta-Tour, Meta-LM, IVA), sin desglose por Buyer ni por anuncio. Meta-LM
+  // combina LM1+LM2. El lado GHL usa el mismo criterio uniforme para las 4 fuentes:
+  // oportunidades del pipeline COMPRADORES con esa Fuente (normFuente), sin filtrar Persona
+  // — a diferencia de la tabla de Objetivo 2, que ademas cuenta "Contacto" via tag lm1/lm2.
+  function computeFuenteResumen(range){
+    const {start,end} = range;
+    function aggMeta(rows, idx){
+      const inWin = rows.filter(r=>r[0]>=start && r[0]<=end);
+      const sum = i => inWin.reduce((s,r)=>s+r[i],0);
+      return {
+        gasto: sum(idx.gasto), impre: sum(idx.impre), alcance: sum(idx.alcance),
+        hook: sum(idx.hook), v50: sum(idx.v50), v75: sum(idx.v75), resultados: sum(idx.resultados)
+      };
+    }
+    const IDX_O = {gasto:3, impre:4, alcance:5, hook:7, v50:8, v75:9, resultados:10};
+    const IDX_O2 = {gasto:2, impre:3, alcance:4, hook:6, v50:7, v75:8, resultados:9};
+    const rows = [
+      Object.assign({fuente:'META-REEL'}, aggMeta(RAW.o1, IDX_O)),
+      Object.assign({fuente:'META-TOUR'}, aggMeta(RAW.o3||[], IDX_O)),
+      Object.assign({fuente:'META-LM'},   aggMeta(RAW.o2, IDX_O2)),
+      Object.assign({fuente:'IVA'},       aggMeta(RAW.o4||[], IDX_O))
+    ];
+    rows.forEach(d=>{
+      const ghlF = RAW.ghl_opp.filter(g=> normFuente(g[1])===d.fuente && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
+      d.wspGhl = ghlF.length;
+      d.visitas = ghlF.filter(g=>g[4].includes('visita')).length;
+      d.postVisita = ghlF.filter(g=>g[4].includes('post_visita')).length;
+    });
+    rows.sort((a,b)=> b.gasto-a.gasto);
+    const keys = ['gasto','impre','alcance','hook','v50','v75','resultados','wspGhl','visitas','postVisita'];
+    const totals = {};
+    keys.forEach(k=> totals[k] = rows.reduce((s,d)=>s+d[k],0));
+    return {rows, totals};
+  }
+
+  function renderFuenteResumen(fr, range){
+    document.getElementById('frSub').textContent = 'Meta-REEL, Meta-Tour, Meta-LM (LM1+LM2) e IVA · sin desglose por Buyer · '+fmtLong(range.start)+' – '+fmtLong(range.end)+' ('+range.days+' dias)';
+
+    function row(d){
+      return '<tr><td>'+d.fuente+'</td>'
+        + '<td>'+fmtMoney(d.gasto)+'</td><td>'+fmtInt(d.impre)+'</td><td>'+ratioOrDash(d.impre,d.alcance)+'</td>'
+        + '<td>'+fmtMoney(d.impre? d.gasto/d.impre*1000:0)+'</td>'
+        + '<td>'+fmtPctAdaptive(d.impre? d.hook/d.impre:0)+'</td><td>'+fmtPctAdaptive(d.impre? d.v50/d.impre:0)+'</td><td>'+fmtPctAdaptive(d.impre? d.v75/d.impre:0)+'</td>'
+        + '<td>'+fmtInt(d.resultados)+'</td>'
+        + '<td>'+fmtInt(d.wspGhl)+'</td><td>'+fmtInt(d.visitas)+'</td><td>'+fmtInt(d.postVisita)+'</td>'
+        + moneyOrIndetTd(d.gasto,d.resultados)
+        + moneyOrIndetTd(d.gasto,d.visitas)
+        + moneyOrIndetTd(d.gasto,d.postVisita)
+        + '</tr>';
+    }
+    let body = fr.rows.map(row).join('');
+    body += row(Object.assign({fuente:'TOTAL'}, fr.totals)).replace('<tr>','<tr class="tot">');
+    document.getElementById('frBody').innerHTML = body;
+  }
+
   function render(key){
     const range = getRange(key);
     const rangeLabel = fmtLong(range.start)+' – '+fmtLong(range.end)+' ('+range.days+' dias)';
@@ -1297,6 +1298,7 @@
     const o2 = computeO2(range);
     const o3 = computeO3(range);
     const o4 = computeO4(range);
+    const fr = computeFuenteResumen(range);
     const fe = computeFuenteEtapa(range);
     const mot = computeMotivosDescarte(range);
 
@@ -1304,6 +1306,7 @@
     renderO2(o2, range);
     renderO3(o3, range);
     renderO4(o4, range);
+    renderFuenteResumen(fr, range);
     renderFuenteEtapa(fe);
     renderMotivosDescarte(mot);
     renderFuenteDia(computeFuenteDia(range));
