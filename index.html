@@ -90,18 +90,40 @@
       <div class="hm"><strong id="hmRange">&nbsp;</strong>Cuenta: CP1-M1200<br>Generado: 24 oct 2026</div>
     </div>
 
-    <div class="filter-bar" id="filterBar">
+    <!-- TABS:START -->
+<style>
+  .tabbar{display:flex;gap:6px;margin-bottom:16px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:6px}
+  .tabbtn{flex:1;background:transparent;border:none;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;transition:.15s;font-family:inherit}
+  .tabbtn:hover{color:var(--text);background:var(--bg2)}
+  .tabbtn.active{background:var(--text);color:#fff}
+  .tabbtn .tb-badge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:10px;font-size:10.5px;background:#FBE6E5;color:#B23A38}
+  .tabbtn.active .tb-badge{background:rgba(255,255,255,.18);color:#fff}
+  .tabbtn .tb-badge:empty{display:none}
+  .tb-ico{width:15px;height:15px;margin-right:7px;vertical-align:-3px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  @media (max-width:560px){ .tabbar{flex-wrap:wrap} .tabbtn{flex:1 1 45%;padding:9px 6px;font-size:12px} .tb-ico{margin-right:4px} }
+</style>
+<div class="tabbar" id="tabBar" role="tablist">
+  <button class="tabbtn active" data-tab="resumen" role="tab"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Resumen ejecutivo</button>
+  <button class="tabbtn" data-tab="performance" role="tab"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Performance</button>
+  <button class="tabbtn" data-tab="scoring" role="tab"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Scoring IA<span class="tb-badge" id="scBadge"></span></button>
+  <button class="tabbtn" data-tab="equipo" role="tab"><svg class="tb-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75M21 21v-2a4 4 0 0 0-3-3.85"/></svg>Equipo IA</button>
+</div>
+<!-- TABS:END -->
+
+<div class="filter-bar" id="filterBar">
       <button class="filter-btn" data-key="ayer">Ayer</button>
       <button class="filter-btn" data-key="7d">&Uacute;ltimos 7 d&iacute;as</button>
       <button class="filter-btn" data-key="14d">&Uacute;ltimos 14 d&iacute;as</button>
       <button class="filter-btn" data-key="30d">&Uacute;ltimos 30 d&iacute;as</button>
       <button class="filter-btn" data-key="60d">&Uacute;ltimos 60 d&iacute;as</button>
       <button class="filter-btn" data-key="90d">&Uacute;ltimos 90 d&iacute;as</button>
+      <button class="filter-btn" data-key="all">Todo el per&iacute;odo</button>
       <span class="filter-range" id="filterRangeLabel"></span>
       <div class="filter-note" id="filterNote"></div>
     </div>
 
-  <div class="section-block">
+  <div id="tab-resumen">
+<div class="section-block">
     <div class="section-title">Resumen por Fuente &middot; Meta Ads</div>
     <div class="section-sub" id="frSub"></div>
 
@@ -165,7 +187,9 @@
 
   </div>
 
-  <div class="section-block">
+  </div>
+<div id="tab-performance" style="display:none">
+<div class="section-block">
     <div class="section-title">Objetivo N&deg;1 &mdash; META-REEL (Interacci&oacute;n + Ventas)</div>
     <div class="section-sub" id="o1Sub"></div>
 
@@ -371,7 +395,359 @@
 
   </div>
 
-  <div class="footer">
+  </div>
+<!-- SCORING:START -->
+<style>
+  .sc-temp{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9.5px;font-weight:700;white-space:nowrap;letter-spacing:.2px}
+  .sc-CALIENTE{background:#FBE6E5;color:#B23A38}.sc-TIBIO{background:#F6ECD9;color:#8A5A1E}.sc-FRIO{background:#E1F3EA;color:#0F7A4E}
+  .sc-k-CALIENTE{border-left:4px solid #E24B4A}.sc-k-TIBIO{border-left:4px solid #D99A2B}.sc-k-FRIO{border-left:4px solid #1D9E75}
+  .sc-filters{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
+  .sc-fbtn{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:7px 16px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:.15s;font-family:inherit}
+  .sc-fbtn:hover{border-color:var(--text);color:var(--text)}
+  .sc-fbtn.active{background:var(--text);color:#fff;border-color:var(--text)}
+  .sc-score{display:flex;align-items:center;gap:8px;justify-content:flex-start}
+  .sc-num{font-size:15px;font-weight:700;min-width:24px;text-align:right}
+  .sc-bar{flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;min-width:40px}
+  .sc-bar span{display:block;height:100%;border-radius:3px}
+  .sc-trend{font-size:10px;font-weight:700}
+  .sc-up{color:#0F7A4E}.sc-down{color:#B23A38}
+  #scTable td{white-space:normal;text-align:left;vertical-align:top;line-height:1.4}
+  #scTable th{text-align:left}
+  #scTable tr.sc-row{cursor:pointer}
+  #scTable tr.sc-det td{background:var(--bg2);font-size:11px;color:var(--text);padding:10px 12px 12px}
+  #scTable tr.sc-det:hover td{background:var(--bg2)}
+  .sc-det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 22px}
+  .sc-det-grid b{display:block;font-size:9.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+  .sc-det-grid ul{padding-left:16px}
+  .sc-name{font-weight:700;font-size:11.5px}
+  .sc-muted{color:var(--text2);font-size:10.5px}
+  .sc-old{color:#B23A38;font-weight:600}
+  .sc-empty{padding:28px;text-align:center;color:var(--text2);font-size:13px}
+  .sc-mobile-only{display:none}
+  @media (max-width:760px){ #scTable .sc-hide-m{display:none} .sc-mobile-only{display:block} #scEtTable th{letter-spacing:0;font-size:8.5px} }
+</style>
+
+<div id="tab-scoring" style="display:none">
+  <div class="section-block">
+    <div class="section-title">Scoring IA &middot; leads m&aacute;s dispuestos a cerrar</div>
+    <div class="section-sub" id="scSub"></div>
+
+    <div class="ks" id="scKpis"></div>
+
+    <div class="ct">Distribuci&oacute;n por etapa</div>
+    <table id="scEtTable" style="margin-bottom:22px">
+      <colgroup><col style="width:28%"><col style="width:18%"><col style="width:18%"><col style="width:18%"><col style="width:18%"></colgroup>
+      <thead><tr><th style="text-align:left">Etapa</th><th>Calientes</th><th>Tibios</th><th>Fr&iacute;os</th><th>Total</th></tr></thead>
+      <tbody id="scEtapas"></tbody>
+    </table>
+
+    <div class="ct">Ranking por probabilidad de reserva</div>
+    <div class="sc-filters" id="scFilters">
+      <button class="sc-fbtn active" data-t="ALL">Todos</button>
+      <button class="sc-fbtn" data-t="CALIENTE">Calientes</button>
+      <button class="sc-fbtn" data-t="TIBIO">Tibios</button>
+      <button class="sc-fbtn" data-t="FRIO">Fr&iacute;os</button>
+    </div>
+    <table id="scTable">
+      <colgroup><col style="width:4%"><col style="width:15%"><col style="width:13%"><col style="width:9%"><col style="width:10%"><col style="width:22%" class="sc-hide-m"><col style="width:17%" class="sc-hide-m"><col style="width:10%"></colgroup>
+      <thead><tr>
+        <th>#</th><th>Nombre</th><th>Score</th><th>Temp.</th><th>Etapa</th>
+        <th class="sc-hide-m">Antecedentes</th><th class="sc-hide-m">Siguiente paso</th><th>&Uacute;lt. mensaje<br>del cliente</th>
+      </tr></thead>
+      <tbody id="scBody"></tbody>
+    </table>
+    <div class="sn" id="scNote"></div>
+  </div>
+</div>
+
+<script id="scoringData" type="application/json">{"corte": "2026-10-24T22:21", "conteo": {"CALIENTE": 1, "TIBIO": 16, "FRIO": 124}, "umbrales": {"caliente": 70, "tibio": 40}, "conteo_por_etapa": {"PARA CARO": {"CALIENTE": 0, "TIBIO": 4, "FRIO": 28}, "VISITA": {"CALIENTE": 1, "TIBIO": 6, "FRIO": 55}, "SEG POST VISITA": {"CALIENTE": 0, "TIBIO": 6, "FRIO": 41}}, "ranking": [{"nombre": "Enzzo Moena", "score": 72, "score_anterior": null, "temperatura": "CALIENTE", "etapa": "VISITA", "antecedentes": "Visitó M2100, le gustó el depto de 2 dormitorios y quiere entusiasmar a su esposa con fotos y fichas antes de decidir.", "senales": ["Visitó y dijo que le gustó mucho", "Pidió fotos para mostrar a su señora", "Interés en 2D piso 2 y terraza mirador", "Último mensaje del cliente hace 4 días"], "objecion": "Falta convencer a su esposa; etiqueta \"para_caro\" sugiere posible tema de precio, sin confirmar en la conversación.", "siguiente_paso": "Hacer seguimiento con Enzzo sobre las fichas, proponer segunda visita con su señora y enviar cotización con la rebaja de IVA para el 2D que le interesó.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-20T11:55", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-20T11:55", "dias_sin_cliente": 4, "mensajes_cliente": 12}, {"nombre": "Carla Zaplana", "score": 66, "score_anterior": null, "temperatura": "TIBIO", "etapa": "SEG POST VISITA", "antecedentes": "Carla visitó M2100 y está evaluando la compra. Hizo consultas legales sobre la promesa, arriendos, certificados e IVA. Dijo que revisaría la información.", "senales": ["Visitó y está en seguimiento post visita", "Pidió revisión legal de promesa vía abogada", "Dice que revisará todo con su pareja", "Último mensaje hace 7 días, respuesta lenta"], "objecion": "Dudas legales y contractuales sin cerrar: está revisando la respuesta de la abogada. Además pospone la revisión por falta de tiempo.", "siguiente_paso": "Escribir a Carla esta semana para ofrecer una llamada breve o reunión que resuelva dudas pendientes. Recordar la exención de IVA desde el 1 de diciembre y proponer enviar el borrador de promesa o condiciones de reserva.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-17T16:09", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-17T12:22", "dias_sin_cliente": 7, "mensajes_cliente": 13}, {"nombre": "Chris", "score": 66, "score_anterior": null, "temperatura": "TIBIO", "etapa": "SEG POST VISITA", "antecedentes": "Christian, con su pareja Noemi, visitó y negocia un departamento con estacionamiento y bodega; ofertó cerca de 7.000 UF frente a 8.169 UF de lista.", "senales": ["Visitó; etapa post visita", "Envió oferta formal por correo (~7.000 UF)", "Negocia precio activamente con pareja", "Sin respuesta al aviso de otra oferta (8 días)"], "objecion": "Brecha de precio: oferta de ~7.000 UF vs ~8.000 UF que la inmobiliaria considera cercano; hay otra oferta compitiendo.", "siguiente_paso": "Llamar a Christian y Noemi con la respuesta de la inmobiliaria a su oferta formal. Proponer una contraoferta cercana a 8.000 UF con condiciones de reserva y un plazo, usando la oferta rival como urgencia.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-20T18:54", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-16T18:05", "dias_sin_cliente": 8, "mensajes_cliente": 16}, {"nombre": "Fernando Hernanadez", "score": 62, "score_anterior": null, "temperatura": "TIBIO", "etapa": "SEG POST VISITA", "antecedentes": "Fernando visitó el edificio varias veces y sigue interesado en el depto 206 (piso 2). Le preocupa la seguridad del piso bajo. El piso 4 queda fuera de presupuesto.", "senales": ["Sigue interesado en depto 206", "Visitó el edificio varias veces", "Promesa cotizada a 8.169 UF", "Escribió hace 4 días"], "objecion": "Preocupación por la seguridad de un piso 2. El piso 4 (2D, 11.070 UF) queda fuera de su presupuesto.", "siguiente_paso": "Carolina debe llamarlo o agendar una nueva visita al depto 206. Hay que mostrarle las medidas de seguridad del piso 2, como acceso, rejas y vista, y recordarle la rebaja de IVA vigente para empujar la reserva.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-20T20:17", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-20T20:14", "dias_sin_cliente": 4, "mensajes_cliente": 13}, {"nombre": "💙", "score": 58, "score_anterior": null, "temperatura": "TIBIO", "etapa": "PARA CARO", "antecedentes": "Lead de anuncio Instagram interesado en depto de M2100 con rebaja de IVA. Recibió cotizaciones y planeaba pedir crédito hipotecario; pausó por temas de salud.", "senales": ["Recibió cotizaciones de unidades específicas", "Gestiona pre aprobación bancaria", "Escribió ayer, conversación reciente", "Banco no priorizado por salud"], "objecion": "Trámite de pre aprobación bancaria demorado por temas de salud; sin fecha para retomarlo.", "siguiente_paso": "Dejar pasar unos días y escribir con empatía. Ofrecer apoyo con el trámite del banco, como un contacto hipotecario o los documentos necesarios. Recordar que se puede reservar mientras llega la pre aprobación y que la campaña de IVA sigue vigente.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-23T11:13", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-23T08:54", "dias_sin_cliente": 1, "mensajes_cliente": 15}, {"nombre": "JSR", "score": 58, "score_anterior": null, "temperatura": "TIBIO", "etapa": "VISITA", "antecedentes": "Joaquín, lead de Instagram, había coordinado visita y la postergó. Retomó el 22-10 preguntando si quedan unidades y si el departamento entra en el beneficio del IVA.", "senales": ["Retomó contacto hace 2 días por iniciativa propia", "Pregunta por beneficio de rebaja de IVA", "Visita agendada antes, nunca concretada", "Etiqueta 'para_caro' sugiere objeción de precio"], "objecion": "Posible precio alto (etiqueta para_caro) y duda de si la unidad califica para la rebaja de IVA.", "siguiente_paso": "Responder de inmediato si la unidad que le interesa entra en la rebaja de IVA, con el precio final y descuento. Proponer fecha y hora concretas para la visita esta semana.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-22T11:55", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-22T11:54", "dias_sin_cliente": 2, "mensajes_cliente": 16}, {"nombre": "Magaly Carrasco", "score": 58, "score_anterior": null, "temperatura": "TIBIO", "etapa": "PARA CARO", "antecedentes": "Lead de anuncio en Facebook interesada en 2D/2B Tipo B (depto 206, UF 7.585). Quiere visita por Zoom; recibió brochure y precios, aún sin fecha.", "senales": ["Pidió visita por Zoom dos veces", "Escribió hace 3 días, retomó tras silencio", "Preguntó entrega inmediata y valores 2D2B", "Sin fecha de visita agendada"], "objecion": "Sin objeción explícita; visita por Zoom aún sin agendar y respondió lento a la ejecutiva.", "siguiente_paso": "Carolina debe proponer hoy dos horarios concretos para la visita por Zoom, enviar el link y confirmar con quien decide.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-21T13:05", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-21T13:01", "dias_sin_cliente": 3, "mensajes_cliente": 9}, {"nombre": "JO TRONCOSO", "score": 52, "score_anterior": null, "temperatura": "TIBIO", "etapa": "SEG POST VISITA", "antecedentes": "Pareja que visitó M2100 y le gustó el depto B1 con rooftop. Negocia con otra inmobiliaria y pide pie en cuotas y mejor precio para considerar B1.", "senales": ["Visitó; quedaron fascinados con depto B1", "Pide revisar precio y pie en cuotas", "Negocia avanzado con otra inmobiliaria", "Último mensaje hace 3 días, conversación activa"], "objecion": "Competencia con mejor esquema de pie (5% + 5% en 18 cuotas, mudanza en diciembre); preocupa escalera y acceso a azotea.", "siguiente_paso": "Obtener de la inmobiliaria aprobación de pie en cuotas y descuento sobre B1, y presentar una contraoferta por escrito. Resolver la escalera y el acceso a la azotea con la solución del vecino. Agendar una llamada o visita con Jorge Alvarez.", "confianza": "ALTA", "ultimo_msg_iso": "2026-10-21T17:31", "ultimo_msg_de": "Cliente", "ultimo_cliente_iso": "2026-10-21T17:31", "dias_sin_cliente": 3, "mensajes_cliente": 14}, {"nombre": "Norma Vera", "score": 50, "score_anterior": null, "temperatura": "TIBIO", "etapa": "PARA CARO", "antecedentes": "Lead de anuncio en Meta. En agosto descartó por presupuesto; reactivó con la rebaja de IVA y pidió Zoom para la semana siguiente. No ha confirmado fecha.", "senales": ["Aceptó Zoom tras campaña IVA", "Pidió reunión la próxima semana", "No respondió día ni horario a Carolina", "Último mensaje hace 9 días"], "objecion": "Presupuesto: las unidades cotizadas en agosto (UF 8.456 y 11.839) superaban lo que podía pagar. No se sabe si la rebaja de IVA lo resuelve.", "siguiente_paso": "Carolina debe escribirle de forma personal y proponer 2 horarios concretos para el Zoom. Debe presentar unidades con la rebaja de IVA desde 6.150 UF y preguntar su presupuesto.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-15T17:16", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-15T17:15", "dias_sin_cliente": 9, "mensajes_cliente": 8}, {"nombre": "Roberto Godoy", "score": 45, "score_anterior": null, "temperatura": "TIBIO", "etapa": "VISITA", "antecedentes": "Lead que agendó visita en julio y no llegó. Le gustaron los 1D 1B. Hoy retoma contacto tras perder su WhatsApp; no ha dicho si sigue interesado.", "senales": ["Escribió hoy, retomando tras meses de silencio", "Se disculpa y muestra disposición a conversar", "Visita previa no concretada (julio)", "Aún no responde a oferta de IVA ni unidades"], "objecion": "Sin objeción explícita; no ha confirmado interés actual ni visitado el proyecto.", "siguiente_paso": "Responder hoy con calidez, preguntar si sigue interesado en 1D 1B y proponer fecha concreta de visita (o Zoom), mencionando la rebaja de IVA y las unidades norte en pisos 2 y 3.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-24T16:34", "ultimo_msg_de": "Cliente", "ultimo_cliente_iso": "2026-10-24T16:34", "dias_sin_cliente": 0, "mensajes_cliente": 12}, {"nombre": "Pablo", "score": 45, "score_anterior": null, "temperatura": "TIBIO", "etapa": "SEG POST VISITA", "antecedentes": "Pablo visitó M2100, recibió brochure, planos y cotizaciones por correo. El 20/10 dijo que sigue analizando opciones, sin precisar unidad ni condiciones.", "senales": ["Visitó el proyecto y pidió planos y precios", "Escribió hace 4 días: sigue analizando", "Sin unidad específica ni consulta de financiamiento", "Etiqueta CRM 'para_caro' sin aclarar"], "objecion": "Sigue comparando opciones; no ha elegido unidad ni mostrado intención concreta de compra.", "siguiente_paso": "Carolina debe proponer una llamada o segunda visita breve. Puede ofrecer una simulación de pie y crédito con la rebaja de IVA para una unidad específica (por ejemplo la 208 desde 6.150 UF). Debe preguntar qué criterios está comparando.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-20T18:30", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-20T08:08", "dias_sin_cliente": 4, "mensajes_cliente": 13}, {"nombre": "Lorena González", "score": 45, "score_anterior": null, "temperatura": "TIBIO", "etapa": "VISITA", "antecedentes": "Lead de Instagram que mostró interés en M2100. Aún no visita; quiere agendar visita la semana del 26 de octubre tras la campaña de rebaja de IVA.", "senales": ["Pidió agendar visita tras masivo de IVA", "Dice que agendará semana del 26 de octubre", "Último mensaje del cliente hace 9 días", "Pospuso visita dos veces, sin fecha fija"], "objecion": "Posterga la visita; no ha confirmado fecha ni mostrado intención concreta de compra.", "siguiente_paso": "Escribirle esta semana para fijar día y hora de visita en la semana del 26 de octubre, con opciones concretas y recordando la rebaja de IVA.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-16T10:04", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-15T20:18", "dias_sin_cliente": 9, "mensajes_cliente": 20}, {"nombre": "Constanza Alvarez AWS", "score": 42, "score_anterior": null, "temperatura": "TIBIO", "etapa": "VISITA", "antecedentes": "Lead web inbound que coordinó visita al edificio para el sábado 17-10 a las 14:30. No hay evidencia en el chat de lo que pasó después ni de qué unidad busca.", "senales": ["Agendó visita y reprogramó a las 2:30 pm", "Visita del sábado 17-10 sin confirmación posterior", "Sin mensajes del cliente hace 7 días", "Sin consultas de precio, pie ni financiamiento"], "objecion": null, "siguiente_paso": "Carolina debe escribirle hoy para saber cómo le fue en la visita. Si asistió, ofrecer cotización de una unidad específica con la rebaja de IVA y consultar por financiamiento y quién decide. Si no asistió, reagendar.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-17T11:34", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-17T11:27", "dias_sin_cliente": 7, "mensajes_cliente": 16}, {"nombre": "Katherine", "score": 42, "score_anterior": null, "temperatura": "TIBIO", "etapa": "VISITA", "antecedentes": "Katherine, lead de anuncio de Instagram por WhatsApp. Recibió valores y fichas de deptos 1D y 2D. Pidió hablar por teléfono con la ejecutiva. No hay visita confirmada.", "senales": ["Recibió cotización y fichas de varios tipos", "Escribió hace 8 días pidiendo hablar", "Sin visita agendada ni fecha", "Etiqueta 'para_caro' sin aclarar"], "objecion": "Posible precio alto (etiqueta 'para_caro'), no confirmado en la conversación", "siguiente_paso": "Carolina debe confirmar si la llamada pendiente se hizo. Si no, llamar hoy, aclarar presupuesto y proponer una visita con fecha, mostrando la opción de 6.150 UF con rebaja de IVA.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-16T12:32", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-16T12:21", "dias_sin_cliente": 8, "mensajes_cliente": 7}, {"nombre": "Hernan Garate", "score": 42, "score_anterior": null, "temperatura": "TIBIO", "etapa": "SEG POST VISITA", "antecedentes": "Visitó M2100 y recibió cotización. Financia la compra con una herencia (posesión efectiva lista, inscripción en el CBR pendiente). Dice que avisará cuando termine el trámite para coordinar la reserva.", "senales": ["Visitó y recibió cotización específica", "Posesión efectiva lista, inscripción CBR en curso", "Dice que coordinará reserva si se decide", "Respuestas cortas: «Te aviso», último hace 8 días"], "objecion": "Espera terminar la inscripción en el CBR y aún no está decidido; no precisó qué necesita para decidir.", "siguiente_paso": "Esperar unos días y escribirle con un dato concreto: avance de la rebaja de IVA, unidades que quedan y fecha límite de la campaña. Proponer una segunda visita o una reserva condicionada a que termine el CBR.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-16T14:25", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-16T13:41", "dias_sin_cliente": 8, "mensajes_cliente": 12}, {"nombre": "Gabriela Rodriguez", "score": 42, "score_anterior": null, "temperatura": "TIBIO", "etapa": "VISITA", "antecedentes": "Gabriela, interesada en M2100, visita reagendada varias veces; debe coordinarse con su marido. Última propuesta: visitar el sábado, sin respuesta.", "senales": ["Reagendó visita varias veces", "Involucra a su marido en la decisión", "Pidió alternativa de día (domingo)", "Sin respuesta del cliente hace 9 días"], "objecion": "Dificultad para coordinar agenda con su marido; visita sin fecha confirmada", "siguiente_paso": "Escribir a Gabriela proponiendo dos horarios concretos para visitar con su marido (por ejemplo, un sábado) y mencionar la campaña de IVA y las unidades que quedan.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-16T10:03", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-15T20:49", "dias_sin_cliente": 9, "mensajes_cliente": 15}, {"nombre": "Claudia Cabezas aravena", "score": 42, "score_anterior": null, "temperatura": "TIBIO", "etapa": "PARA CARO", "antecedentes": "Lead interesada en 2D; recibió opciones y pidió visita a fin de mes a las 18:00. No respondió a la ejecutiva sobre nombre y día.", "senales": ["Pidió 2D y quiere visitar a fin de mes", "Propuso horario 18:00, sin día definido", "Ejecutiva preguntó nombre y día, sin respuesta", "Último mensaje del cliente hace 19 días"], "objecion": "Visita sin día confirmado; no respondió a la ejecutiva desde el 5 de octubre.", "siguiente_paso": "Carolina debe escribirle ahora y proponer días concretos de fin de mes a las 18:00 (por ejemplo, 28, 29 o 30) para confirmar la visita a un 2D.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-05T09:22", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-05T08:38", "dias_sin_cliente": 19, "mensajes_cliente": 4}, {"nombre": "🫧nicole", "score": 38, "score_anterior": null, "temperatura": "FRIO", "etapa": "PARA CARO", "antecedentes": "Interesada en depto tipo A (16.708 UF). Le gusta el edificio, pero duda de la cocina y de los dormitorios contiguos. Evalúa una visita.", "senales": ["Escribió hace 4 días, conversación reciente", "Preguntó horarios de visita", "Objeciones de cocina y dormitorios pegados", "Sin fecha de visita agendada"], "objecion": "Distribución: cocina cerrada solo con pared y dormitorios pegados con poca privacidad", "siguiente_paso": "Proponer dos horarios concretos de visita esta semana y ofrecer una tipología alternativa (1D o 2D) con otra distribución, para resolver la objeción de privacidad y cocina.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-20T19:01", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-20T18:59", "dias_sin_cliente": 4, "mensajes_cliente": 15}, {"nombre": "SAMUEL", "score": 38, "score_anterior": null, "temperatura": "FRIO", "etapa": "VISITA", "antecedentes": "Samuel, viaja desde Punta Arenas. Agendó y confirmó una visita, pero la canceló por enfermedad de su hijo. Propone reagendar al volver el 6 de noviembre.", "senales": ["Confirmó visita pero no asistió (hijo enfermo)", "Quiere reagendar tras el 6 de noviembre", "Último mensaje del cliente hace 7 días", "Etiqueta 'para_caro' sin aclarar"], "objecion": "Etiqueta 'para_caro' sugiere posible objeción de precio. No volvió a escribir sobre ella. Además, no estará en Santiago hasta el 6 de noviembre.", "siguiente_paso": "Escribirle cerca del 6 de noviembre para dejar la visita agendada con fecha y hora. Antes, enviarle cotización y condiciones de la rebaja de IVA para mantener el interés. Preguntar con discreción por el presupuesto.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-17T10:45", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-17T10:21", "dias_sin_cliente": 7, "mensajes_cliente": 13}, {"nombre": "AF", "score": 38, "score_anterior": null, "temperatura": "FRIO", "etapa": "VISITA", "antecedentes": "Andrés Fuentes, viajero a Santiago, canceló visita del 16 y pidió reagendar para el miércoles; no ha respondido desde entonces. Sin consultas concretas de unidad.", "senales": ["Pidió reagendar visita para miércoles", "Sin respuesta a último mensaje de ejecutiva", "8 días sin escribir el cliente", "Etiqueta 'para_caro' sugiere objeción de precio"], "objecion": "Posible presupuesto/precio alto (etiqueta para_caro); visita sin reagendar ni hora confirmada", "siguiente_paso": "Llamar o escribir a Andrés para fijar día y hora de visita, destacando la rebaja de IVA y las unidades desde 6.150 UF, y consultar su presupuesto.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-20T18:27", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-16T10:25", "dias_sin_cliente": 8, "mensajes_cliente": 15}, {"nombre": "Paulo Soto", "score": 38, "score_anterior": null, "temperatura": "FRIO", "etapa": "SEG POST VISITA", "antecedentes": "Lead post visita que sigue buscando 1D. Recibió precios desde 6.150 UF con IVA reducido. Dice mantener interés pero sin decisión tomada.", "senales": ["Visitó (etiqueta post_visita)", "Mantiene interés el 16-10, sin decidir", "Sin respuesta a pregunta sobre qué necesita", "Último mensaje del cliente hace 8 días"], "objecion": "Indecisión: no ha dicho qué necesita para decidir; posible comparación con otros proyectos.", "siguiente_paso": "Carolina debe llamarlo o escribirle con una propuesta concreta del 1D piso 2 (6.150 UF más estacionamiento y bodega), con simulación de pie y crédito y descuento. También debe ofrecerle una segunda visita con quien decida.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-16T12:53", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-16T08:44", "dias_sin_cliente": 8, "mensajes_cliente": 10}, {"nombre": "Diego", "score": 38, "score_anterior": null, "temperatura": "FRIO", "etapa": "VISITA", "antecedentes": "Diego, evalúa comprar con su pareja. Reactivó con la campaña de IVA y pidió visitar el proyecto. Antes dijo que el precio le quedaba alto.", "senales": ["Pidió visitar el mismo día (12-10)", "No respondió propuesta de visita del 14-10", "Consulta con su pareja antes de decidir", "Dijo que el precio le queda alto"], "objecion": "Precio alto (estacionamiento y bodega aparte); decide con su pareja y no confirmó la visita.", "siguiente_paso": "Carolina debe escribirle por WhatsApp con 2 opciones concretas de día y hora para visitar (invitando a su pareja). Debe incluir una cotización con la rebaja de IVA para una unidad específica.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-14T10:13", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-12T10:59", "dias_sin_cliente": 12, "mensajes_cliente": 9}, {"nombre": "juan julio", "score": 38, "score_anterior": null, "temperatura": "FRIO", "etapa": "PARA CARO", "antecedentes": "Lead que agendó y asistió a visita presencial el 10-10 con Carolina; preguntó por estacionamientos. Sin información posterior a la visita.", "senales": ["Visitó el 10-10 puntualmente", "Confirmó visita y preguntó por estacionamientos", "Sin mensajes del cliente hace 14 días", "Sin cotización ni consultas de financiamiento"], "objecion": null, "siguiente_paso": "Carolina debe hacer seguimiento post-visita: preguntar su impresión, enviar cotización de la unidad de interés con la rebaja de IVA y proponer una segunda visita o llamada.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-10T11:01", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-10T10:59", "dias_sin_cliente": 14, "mensajes_cliente": 12}, {"nombre": "Dra. Andrea Castiblanco", "score": 38, "score_anterior": null, "temperatura": "FRIO", "etapa": "VISITA", "antecedentes": "Doctora interesada en depto de 2D (unidad 403, UF 11.070) vía anuncio de Facebook. Quiere visita presencial, pero no cerró horario y dejó de responder.", "senales": ["Pidió visita presencial y propuso sábado", "Rechazó horario 1 pm por cercanía", "No respondió seguimiento del 13-10", "14 días sin escribir; etiqueta para_caro"], "objecion": "Posible precio alto (etiqueta para_caro); visita sin horario confirmado", "siguiente_paso": "Carolina debe llamar o escribir con 2-3 horarios concretos de visita, incluido un sábado, y mencionar la rebaja de IVA y el descuento. Si el precio es el problema, ofrecer una unidad más económica.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-13T15:45", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-10T12:51", "dias_sin_cliente": 14, "mensajes_cliente": 12}, {"nombre": "Susy😄", "score": 38, "score_anterior": null, "temperatura": "FRIO", "etapa": "PARA CARO", "antecedentes": "Lead de anuncio Meta que pidió detalles de deptos y renta mínima; reactivada por rebaja de IVA, pidió precios y ubicación, sin visita ni unidad elegida.", "senales": ["Respondió a reactivación pidiendo info completa", "Preguntó por renta mínima (financiamiento)", "Sin visita agendada ni cotización específica", "17 días sin escribir; ejecutiva sin respuesta visible"], "objecion": "Capacidad de financiamiento: renta mínima exigida sin respuesta clara.", "siguiente_paso": "Carolina debe enviar precios, ubicación y renta mínima/simulación de crédito con la rebaja de IVA, y proponer visita con fecha concreta.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-07T11:05", "ultimo_msg_de": "Cliente", "ultimo_cliente_iso": "2026-10-07T11:05", "dias_sin_cliente": 17, "mensajes_cliente": 9}, {"nombre": "Gonzalo", "score": 38, "score_anterior": null, "temperatura": "FRIO", "etapa": "VISITA", "antecedentes": "Lead de anuncio de Instagram que pidió tipologías, pisos, orientación y precios. En octubre respondió a la campaña de IVA pidiendo info por WhatsApp antes de agendar visita.", "senales": ["Respondió al masivo pidiendo info por WhatsApp", "Pidió tipologías, piso y orientación detallados", "Dijo 'cuando pueda te aviso' sin fecha", "17 días sin escribir; sin visita agendada"], "objecion": "No quiere agendar visita aún; prefiere recibir información por WhatsApp primero.", "siguiente_paso": "Enviar por WhatsApp una propuesta con las unidades más económicas (piso, orientación y precio con la rebaja de IVA y el descuento) y proponer una visita con fecha concreta.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-07T11:20", "ultimo_msg_de": "Cliente", "ultimo_cliente_iso": "2026-10-07T11:20", "dias_sin_cliente": 17, "mensajes_cliente": 8}, {"nombre": "Adrian", "score": 35, "score_anterior": null, "temperatura": "FRIO", "etapa": "SEG POST VISITA", "antecedentes": "Lead de anuncio en Facebook interesado en M2100. Visitó el 15-10 con la ejecutiva. No hay conversación posterior a la visita en lo visible y el CRM lo marca como 'para_caro'.", "senales": ["Visitó el 15-10 en la propiedad", "Sin mensajes del cliente hace 9 días", "Etiqueta CRM 'para_caro' (posible objeción de precio)", "Sin consultas de cotización ni financiamiento"], "objecion": "Posible precio alto (etiqueta 'para_caro'), no confirmado en la conversación.", "siguiente_paso": "Escribirle hoy para preguntar qué le pareció la visita. Ofrecer una cotización de una unidad específica con la rebaja de IVA y el descuento vigente, y revisar su presupuesto y financiamiento.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-15T14:47", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-15T14:11", "dias_sin_cliente": 9, "mensajes_cliente": 15}, {"nombre": "RR", "score": 35, "score_anterior": null, "temperatura": "FRIO", "etapa": "SEG POST VISITA", "antecedentes": "Raúl visitó el proyecto y recibió dos cotizaciones. Dice que las está revisando y que escribirá si necesita algo. Hay una etiqueta de precio alto.", "senales": ["Visitó y recibió 2 cotizaciones", "Último mensaje del cliente hace 9 días", "Respuestas cortas y sin compromiso", "Etiqueta 'para_caro' en el CRM"], "objecion": "Posible precio alto (etiqueta para_caro); no lo ha dicho en la conversación.", "siguiente_paso": "Llamar o escribir con un ángulo concreto: confirmar cuál de las 2 cotizaciones le interesa y ofrecer simular financiamiento con la rebaja de IVA y el descuento vigente. Preguntar si el precio es el freno y si quiere volver a visitar con quien decide.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-15T11:29", "ultimo_msg_de": "Cliente", "ultimo_cliente_iso": "2026-10-15T11:29", "dias_sin_cliente": 9, "mensajes_cliente": 18}, {"nombre": "Nahuel Curletti", "score": 35, "score_anterior": null, "temperatura": "FRIO", "etapa": "SEG POST VISITA", "antecedentes": "Lead que visitó M2100 el 13-10 y recibió brochure y ficha de un departamento. Quedó en revisar el material y escribir si tiene dudas.", "senales": ["Visitó el proyecto el 13-10", "Recibió brochure y ficha de un depto", "Dijo que revisaría y escribiría", "11 días sin escribir tras la visita"], "objecion": null, "siguiente_paso": "Carolina debe escribirle hoy para hacer seguimiento de la visita. Puede ofrecerle una cotización del departamento de la ficha con la rebaja de IVA vigente y proponerle una segunda visita con quien decide.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-13T15:48", "ultimo_msg_de": "Carolina", "ultimo_cliente_iso": "2026-10-13T15:48", "dias_sin_cliente": 11, "mensajes_cliente": 15}, {"nombre": "Daniel Contreras Castro", "score": 35, "score_anterior": null, "temperatura": "FRIO", "etapa": "VISITA", "antecedentes": "Lead de regiones, interesado en depto 1D tipo C. Recibió fichas y precios, negocia el valor y no tiene fecha para visitar Santiago.", "senales": ["Último mensaje del cliente hace 16 días", "Preguntó por descuento del tipo C", "Aún no viaja a Santiago, sin visita", "Compara precios entre pisos; etiqueta 'para_caro'"], "objecion": "Precio alto: el tipo C del piso 3 cuesta unas 1.000 UF más que el del piso 2, y no logró más descuento. Tampoco tiene fecha de viaje.", "siguiente_paso": "Escribirle con una opción concreta, el depto del piso 2 desde 6.150 UF con simulación de total y financiamiento. Ofrecer una visita por zoom o fijar fecha para su próximo viaje a Santiago.", "confianza": "MEDIA", "ultimo_msg_iso": "2026-10-08T15:42", "ultimo_msg_de": "Cliente", "ultimo_cliente_iso": "2026-10-08T15:42", "dias_sin_cliente": 16, "mensajes_cliente": 13}]}</script>
+<script>
+(function () {
+  var raw = document.getElementById('scoringData').textContent;
+  var D = null;
+  try { D = JSON.parse(raw); } catch (e) { D = null; }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  function fecha(iso) { if (!iso) return ''; var d = iso.slice(0, 10).split('-'); return parseInt(d[2], 10) + ' ' + MESES[parseInt(d[1], 10) - 1]; }
+  var TL = { CALIENTE: 'Caliente', TIBIO: 'Tibio', FRIO: 'Frío' };
+  var TC = { CALIENTE: '#E24B4A', TIBIO: '#D99A2B', FRIO: '#1D9E75' };
+
+  if (!D || !D.ranking) {
+    document.getElementById('scSub').textContent = 'Sin datos de scoring disponibles para este reporte.';
+    document.getElementById('scBody').innerHTML = '<tr><td colspan="8" class="sc-empty">El agente de scoring todavía no ha corrido.</td></tr>';
+  } else {
+    var c = D.conteo || {};
+    var total = (c.CALIENTE || 0) + (c.TIBIO || 0) + (c.FRIO || 0);
+    var badge = document.getElementById('scBadge');
+    if (badge) badge.textContent = (c.CALIENTE || 0) + ((c.CALIENTE || 0) === 1 ? ' caliente' : ' calientes');
+    document.getElementById('scSub').innerHTML = 'Probabilidad de que el lead reserve en las pr&oacute;ximas 4 semanas (1 a 100), le&iacute;da por IA desde WhatsApp en GHL &middot; corte ' +
+      esc(fecha(D.corte)) + ' ' + esc((D.corte || '').slice(11, 16)) + ' &middot; <b>no depende del filtro de fechas</b>';
+
+    var k = '';
+    [['CALIENTE', 'Calientes', '≥ ' + D.umbrales.caliente], ['TIBIO', 'Tibios', D.umbrales.tibio + '–' + (D.umbrales.caliente - 1)], ['FRIO', 'Fríos', '< ' + D.umbrales.tibio]].forEach(function (x) {
+      k += '<div class="k sc-k-' + x[0] + '"><div class="kl">' + x[1] + '</div><div class="kv">' + (c[x[0]] || 0) + '</div><div class="ks2">score ' + x[2] + '</div></div>';
+    });
+    var top10 = D.ranking.slice(0, 10), prom = top10.length ? Math.round(top10.reduce(function (a, r) { return a + r.score; }, 0) / top10.length) : 0;
+    k += '<div class="k"><div class="kl">Leads puntuados</div><div class="kv">' + total + '</div><div class="ks2">Para Caro, Visita y Post visita</div></div>';
+    k += '<div class="k"><div class="kl">Score prom. top 10</div><div class="kv">' + prom + '</div><div class="ks2">de 100</div></div>';
+    document.getElementById('scKpis').innerHTML = k;
+
+    var et = '', ce = D.conteo_por_etapa || {};
+    Object.keys(ce).forEach(function (e) {
+      var v = ce[e], t = (v.CALIENTE || 0) + (v.TIBIO || 0) + (v.FRIO || 0);
+      et += '<tr><td>' + esc(e) + '</td><td>' + (v.CALIENTE || 0) + '</td><td>' + (v.TIBIO || 0) + '</td><td>' + (v.FRIO || 0) + '</td><td><b>' + t + '</b></td></tr>';
+    });
+    et += '<tr class="tot"><td>Total</td><td>' + (c.CALIENTE || 0) + '</td><td>' + (c.TIBIO || 0) + '</td><td>' + (c.FRIO || 0) + '</td><td>' + total + '</td></tr>';
+    document.getElementById('scEtapas').innerHTML = et;
+
+    function filas(filtro) {
+      var h = '';
+      D.ranking.forEach(function (r, i) {
+        if (filtro !== 'ALL' && r.temperatura !== filtro) return;
+        var tr = '';
+        if (r.score_anterior != null && r.score_anterior !== r.score) {
+          var dlt = r.score - r.score_anterior;
+          tr = '<span class="sc-trend ' + (dlt > 0 ? 'sc-up">▲ ' : 'sc-down">▼ ') + Math.abs(dlt) + '</span>';
+        }
+        var dias = r.dias_sin_cliente;
+        var ult = r.ultimo_cliente_iso ? esc(fecha(r.ultimo_cliente_iso)) + '<br><span class="sc-muted' + (dias > 14 ? ' sc-old' : '') + '">' +
+          (dias === 0 ? 'hoy' : dias === 1 ? 'ayer' : 'hace ' + dias + ' días') + '</span>' : '<span class="sc-muted">nunca escribió</span>';
+        h += '<tr class="sc-row" data-i="' + i + '">' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td><span class="sc-name">' + esc(r.nombre) + '</span>' + (r.confianza === 'BAJA' ? '<br><span class="sc-muted">poca información</span>' : '') + '</td>' +
+          '<td><div class="sc-score"><span class="sc-num" style="color:' + TC[r.temperatura] + '">' + r.score + '</span><div class="sc-bar"><span style="width:' + r.score + '%;background:' + TC[r.temperatura] + '"></span></div>' + tr + '</div></td>' +
+          '<td><span class="sc-temp sc-' + r.temperatura + '">' + TL[r.temperatura] + '</span></td>' +
+          '<td>' + esc(r.etapa) + '</td>' +
+          '<td class="sc-hide-m">' + esc(r.antecedentes) + '</td>' +
+          '<td class="sc-hide-m">' + esc(r.siguiente_paso) + '</td>' +
+          '<td>' + ult + '</td></tr>';
+        var sen = (r.senales || []).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
+        h += '<tr class="sc-det" data-d="' + i + '" style="display:none"><td></td><td colspan="7"><div class="sc-det-grid">' +
+          '<div><b>Señales</b>' + (sen ? '<ul>' + sen + '</ul>' : '—') + '</div>' +
+          '<div><b>Objeción principal</b>' + (r.objecion ? esc(r.objecion) : 'Sin objeción visible') + '</div>' +
+          '<div><b>Conversación</b>' + (r.mensajes_cliente || 0) + ' mensajes del cliente (últimos 40) · último en escribir: ' + esc(r.ultimo_msg_de || '—') +
+          (r.ultimo_msg_iso ? ' el ' + esc(fecha(r.ultimo_msg_iso)) : '') + '</div>' +
+          '<div class="sc-mobile-only"><b>Antecedentes</b>' + esc(r.antecedentes) + '<br><br><b>Siguiente paso</b>' + esc(r.siguiente_paso) + '</div>' +
+          '</div></td></tr>';
+      });
+      document.getElementById('scBody').innerHTML = h || '<tr><td colspan="8" class="sc-empty">No hay leads en esta categoría dentro del top.</td></tr>';
+    }
+    filas('ALL');
+    document.getElementById('scBody').addEventListener('click', function (ev) {
+      var row = ev.target.closest('tr.sc-row'); if (!row) return;
+      var det = document.querySelector('tr.sc-det[data-d="' + row.dataset.i + '"]');
+      if (det) det.style.display = det.style.display === 'none' ? '' : 'none';
+    });
+    document.querySelectorAll('#scFilters .sc-fbtn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('#scFilters .sc-fbtn').forEach(function (x) { x.classList.toggle('active', x === b); });
+        filas(b.dataset.t);
+      });
+    });
+    document.getElementById('scNote').innerHTML = 'Top ' + D.ranking.length + ' de ' + total + ' leads abiertos en Para Caro, Visita y Seg. Post Visita. Score calculado por IA leyendo los últimos 40 mensajes de WhatsApp de cada lead; ' +
+      'se recalcula si hay mensajes nuevos, cambio de etapa o cada 3 días. ▲▼ = cambio desde el score anterior. Toca una fila para ver señales, objeción y detalle de la conversación. ' +
+      'La IA solo ve WhatsApp: llamadas o visitas no registradas no se reflejan.';
+  }
+})();
+</script>
+<!-- SCORING:END -->
+<!-- EQUIPO:START -->
+<style>
+  .eq-grid{display:grid;grid-template-columns:minmax(300px,0.9fr) 1.4fr;gap:18px;align-items:start}
+  .eq-tree{position:relative}
+  .eq-root{display:flex;justify-content:center;margin-bottom:6px}
+  .eq-node{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:#fff;border:1px solid var(--border2);border-radius:10px;padding:10px 12px;cursor:pointer;font-family:inherit;color:var(--text);transition:.15s}
+  .eq-node:hover{border-color:var(--text)}
+  .eq-node.sel{border-color:var(--text);box-shadow:0 0 0 2px var(--text) inset}
+  .eq-node .eq-ico{flex:none;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--bg2)}
+  .eq-node .eq-ico svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .eq-nt{flex:1;min-width:0}
+  .eq-nn{font-size:12.5px;font-weight:700;line-height:1.25}
+  .eq-ns{font-size:10.5px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .eq-chev{flex:none;width:16px;height:16px;transition:transform .15s;color:var(--text2)}
+  .eq-area.open > .eq-node .eq-chev{transform:rotate(90deg)}
+  .eq-area{margin-top:10px}
+  .eq-kids{display:none;margin:8px 0 0 18px;padding-left:14px;border-left:1.5px solid var(--border2)}
+  .eq-area.open .eq-kids{display:grid;gap:7px}
+  .eq-kids .eq-node{padding:8px 10px}
+  .eq-kids .eq-ico{width:28px;height:28px}
+  .eq-stem{width:1.5px;height:12px;background:var(--border2);margin:0 auto}
+  .eq-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex:none}
+  .st-operando{background:#1D9E75}.st-piloto{background:#378ADD}.st-siguiente{background:#D99A2B}.st-ruta{background:transparent;border:1.5px dashed #9b998f}.st-humano{background:transparent;border:1.5px solid var(--text)}.st-area{display:none}
+  .eq-node.ruta{background:var(--bg2);border-style:dashed}
+  .eq-node.ruta .eq-nn{color:var(--text2)}
+  .eq-chip{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.2px;white-space:nowrap}
+  .ch-operando{background:#E1F3EA;color:#0F7A4E}.ch-piloto{background:#E6F1FB;color:#0C447C}.ch-siguiente{background:#F6ECD9;color:#8A5A1E}.ch-ruta{background:#EDEDED;color:#555}.ch-humano{background:#1a1916;color:#fff}.ch-area{background:#EEE7F6;color:#6B3FA0}
+  .eq-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px 22px;position:sticky;top:12px;min-height:420px}
+  .eq-crumb{font-size:11px;color:var(--text2);margin-bottom:12px}
+  .eq-crumb a{color:var(--text2);text-decoration:none;cursor:pointer;border-bottom:1px dotted var(--text2)}
+  .eq-crumb a:hover{color:var(--text)}
+  .eq-h{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .eq-h .eq-ico{width:44px;height:44px;border-radius:10px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center}
+  .eq-h .eq-ico svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .eq-h h3{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+  .eq-persona{font-size:12px;color:var(--text2);margin-top:2px}
+  .eq-desc{font-size:13px;line-height:1.55;color:var(--text);margin:12px 0 16px}
+  .eq-sec{font-size:9.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 8px}
+  .eq-per{font-weight:400;opacity:.7;text-transform:none}
+  .eq-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+  .eq-kpi{background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+  .eq-kpi .kv{font-size:18px}
+  .eq-kpi .kl{text-transform:none;letter-spacing:0;font-size:10.5px;margin-bottom:3px}
+  .eq-kpi.alerta .kv{color:#B23A38}
+  .eq-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+  .eq-fact{background:#fff;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:12px;line-height:1.45}
+  .eq-fact b{display:block;font-size:9.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+  .eq-ok{color:#0F7A4E;font-weight:700}
+  .eq-tags{display:flex;flex-wrap:wrap;gap:6px}
+  .eq-tag{background:#fff;border:1px solid var(--border2);border-radius:6px;padding:4px 9px;font-size:11.5px}
+  .eq-link{background:#fff;border:1px solid var(--border2);border-radius:20px;padding:4px 11px 4px 8px;font-size:11.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;color:var(--text)}
+  .eq-link:hover{border-color:var(--text)}
+  .eq-list{font-size:12.5px;line-height:1.6;padding-left:18px}
+  .eq-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .eq-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:10.5px;color:var(--text2);margin:14px 0 0}
+  .eq-legend span{display:inline-flex;align-items:center;gap:5px}
+  @media (max-width:860px){ .eq-grid{grid-template-columns:1fr} .eq-panel{position:static} .eq-two{grid-template-columns:1fr} }
+</style>
+
+<div id="tab-equipo" style="display:none">
+  <div class="section-block">
+    <div class="section-title">Equipo IA &middot; c&oacute;mo est&aacute; organizada la operaci&oacute;n</div>
+    <div class="section-sub" id="eqSub"></div>
+    <div class="eq-grid">
+      <div>
+        <div class="eq-tree" id="eqTree"></div>
+        <div class="eq-legend">
+          <span><i class="eq-dot st-operando"></i>Operando</span>
+          <span><i class="eq-dot st-piloto"></i>Piloto</span>
+          <span><i class="eq-dot st-siguiente"></i>Siguiente</span>
+          <span><i class="eq-dot st-ruta"></i>Hoja de ruta</span>
+          <span><i class="eq-dot st-humano"></i>Persona</span>
+        </div>
+      </div>
+      <div class="eq-panel" id="eqPanel" aria-live="polite"></div>
+    </div>
+  </div>
+</div>
+
+<script id="equipoData" type="application/json">{"actualizado": "2026-10-24T22:21", "nodos": [{"id": "dir", "padre": null, "tipo": "humano", "estado": "humano", "nombre": "Dirección", "persona": "Gianfranco Lutjens", "icono": "crown", "descripcion": "Define la estrategia comercial y de marketing de M2100, prioriza el trabajo de los agentes y toma las decisiones que la IA no toma: precios, descuentos, presupuesto de pauta y cambios en el equipo.", "kpis": [{"n": "Oportunidades en etapas avanzadas", "v": "141"}, {"n": "Leads calientes hoy", "v": "1"}, {"n": "Gasto Meta", "src": "fr:gasto"}], "recibe": ["Reporte nocturno", "Scoring diario (piloto)", "Copia de la auditoría diaria"]}, {"id": "com", "padre": "dir", "tipo": "area", "estado": "area", "nombre": "Comercial", "icono": "briefcase", "descripcion": "Convierte conversaciones de WhatsApp en visitas y reservas. Los agentes atienden, priorizan y detectan pendientes; la ejecutiva cierra.", "kpis": [{"n": "Oportunidades en Para Caro, Visita y Post visita", "v": "141"}, {"n": "Leads que esperan respuesta hoy", "v": "13", "alerta": true}, {"n": "Derivados a la ejecutiva", "src": "fe:derivados"}]}, {"id": "mkt", "padre": "dir", "tipo": "area", "estado": "area", "nombre": "Marketing", "icono": "speakerphone", "descripcion": "Trae leads al menor costo por lead calificado y mide qué fuente y qué anuncio funcionan de verdad.", "kpis": [{"n": "Gasto Meta", "src": "fr:gasto"}, {"n": "Leads calificados", "src": "fr:calificados"}, {"n": "Costo por calificado", "src": "fr:costo_calif"}]}, {"id": "cal", "padre": "dir", "tipo": "area", "estado": "area", "nombre": "Calidad y operaciones", "icono": "shield", "descripcion": "Vigila que el bot responda bien, que el equipo cumpla los tiempos de respuesta y que el CRM refleje la realidad.", "kpis": [{"n": "Puestos operando", "v": "0 de 3"}, {"n": "Siguiente a construir", "v": "Calidad del asistente"}]}, {"id": "wsp", "padre": "com", "tipo": "agente", "estado": "operando", "nombre": "Asistente WhatsApp", "icono": "message", "descripcion": "Responde 24/7 a los leads que llegan por WhatsApp, entrega precios desde el primer mensaje, califica y deriva a la ejecutiva cuando el lead está listo. Después del traspaso se calla.", "kpis": [{"n": "Oportunidades nuevas", "src": "fe:total"}, {"n": "Derivados a la ejecutiva", "src": "fe:derivados"}, {"n": "Descartadas", "src": "fe:descartado", "alerta": true}], "corre": "Siempre activo · responde en minutos", "plataforma": "GHL Conversation AI", "herramientas": ["GoHighLevel (CRM y WhatsApp)", "Base de conocimiento con inventario de 9 unidades", "Workflows de traspaso y red de seguridad (5 días)"], "insumos": ["Mensajes entrantes de WhatsApp", "Lista de precios vigente (campaña IVA)"], "entregables": ["Conversación calificada", "Lead derivado a Para Caro con tag de traspaso"], "depende": [], "alimenta": ["aud", "cbot", "car"]}, {"id": "aud", "padre": "com", "tipo": "agente", "estado": "operando", "nombre": "Auditor de conversaciones", "icono": "eye", "descripcion": "Cada madrugada lee las conversaciones de las etapas avanzadas y detecta a qué leads les debemos algo: una pregunta sin respuesta, una promesa incumplida o una visita sin hora. Le entrega a la ejecutiva una lista accionable.", "kpis": [{"n": "Oportunidades auditadas", "v": "141"}, {"n": "Leads en rojo (le debemos algo)", "v": "13", "alerta": true}, {"n": "Rojos nuevos hoy", "v": "1"}, {"n": "Errores de clasificación", "v": "0"}], "ultima": "24 oct · 05:52", "resultado": "ok", "resultado_txt": "Correo enviado a Carolina, Gianfranco y Jorge", "corre": "Diario desde la 01:00 (hora Chile) · un envío por día", "plataforma": "GitHub Actions · barrio-ops", "herramientas": ["API de GHL (solo lectura)", "Claude Sonnet 5.5 (workspace M2100)", "Gmail (envío del correo)", "Estado diario en repositorio privado"], "insumos": ["Conversaciones de WhatsApp de Para Caro, Visita y Post visita", "Estado de la corrida anterior"], "entregables": ["Correo diario con tarjetas por lead (semáforo, qué hacer, evidencia)"], "depende": ["wsp"], "alimenta": ["sco", "car", "cbot", "sla"]}, {"id": "sco", "padre": "com", "tipo": "agente", "estado": "piloto", "nombre": "Scoring de leads", "icono": "flame", "descripcion": "Puntúa de 1 a 100 la probabilidad de que cada lead reserve en las próximas 4 semanas y arma el ranking de los más dispuestos a cerrar, con su siguiente paso.", "kpis": [{"n": "Leads puntuados", "v": "141"}, {"n": "Calientes (≥70)", "v": "1"}, {"n": "Tibios (40-69)", "v": "16"}, {"n": "Lead #1 del ranking", "v": "Enzzo Moena · 72"}], "ultima": "24 oct · 22:21", "resultado": "ok", "resultado_txt": "Corrida de prueba · correo solo a Gianfranco", "corre": "Diario, misma ventana que el auditor", "plataforma": "GitHub Actions · barrio-ops", "herramientas": ["API de GHL (solo lectura)", "Claude Sonnet 5.5 (workspace M2100)", "Gmail (envío del ranking)", "Estado y tendencia en repositorio privado"], "insumos": ["Conversaciones de WhatsApp de las etapas avanzadas", "Score anterior de cada lead"], "entregables": ["Correo con el top 15", "Pestaña Scoring IA de este reporte"], "depende": ["aud"], "alimenta": ["post", "react", "dir", "car"]}, {"id": "car", "padre": "com", "tipo": "humano", "estado": "humano", "nombre": "Ejecutiva comercial", "persona": "Carolina Climent", "icono": "user", "descripcion": "Recibe los leads listos del asistente y las listas de los agentes, coordina visitas y lleva la negociación hasta la reserva. Es quien cierra.", "kpis": [{"n": "Leads que esperan respuesta hoy", "v": "13", "alerta": true}, {"n": "En visita o post visita", "v": "109"}], "recibe": ["Correo diario del auditor", "Leads derivados por el asistente"]}, {"id": "post", "padre": "com", "tipo": "agente", "estado": "ruta", "nombre": "Seguimiento post-visita", "icono": "home", "descripcion": "Para cada lead que visitó, prepara el seguimiento: qué preguntó, qué objeción tuvo, qué enviarle y cuándo. Ataca la etapa de mayor valor del embudo.", "kpis": [{"n": "Leads en Visita o Post visita", "v": "109"}], "corre": "Diario (propuesto)", "plataforma": "barrio-ops", "herramientas": ["API de GHL", "Claude", "Cotizador"], "depende": ["sco", "aud"], "alimenta": ["car"]}, {"id": "react", "padre": "com", "tipo": "agente", "estado": "ruta", "nombre": "Reactivador", "icono": "refresh", "descripcion": "Redacta mensajes de reactivación para leads tibios que dejaron de responder. La ejecutiva los aprueba; nunca sale nada automático.", "kpis": [{"n": "Leads tibios hoy", "v": "16"}], "corre": "Semanal (propuesto)", "plataforma": "barrio-ops", "herramientas": ["API de GHL", "Claude"], "depende": ["sco"], "alimenta": ["car"]}, {"id": "rep", "padre": "mkt", "tipo": "agente", "estado": "operando", "nombre": "Reporte nocturno", "icono": "chart", "descripcion": "Cada noche consolida Meta Ads y GHL, arma este reporte con filtros de fecha, insights por rol y la pestaña de scoring, y lo publica.", "kpis": [{"n": "Resultados Meta", "src": "fr:resultados"}, {"n": "Leads calificados", "src": "fr:calificados"}, {"n": "Costo por calificado", "src": "fr:costo_calif"}], "ultima": "24 oct · 04:17", "resultado": "ok", "resultado_txt": "Reporte publicado", "corre": "Diario a las 03:15 (hora Chile)", "plataforma": "Tarea programada de Claude", "herramientas": ["Google Sheets + Apps Script (extracción 2-3 am)", "Meta Ads API", "GHL API", "GitHub Pages"], "insumos": ["Sheet de extracción", "Scoring del día"], "entregables": ["Este reporte"], "depende": [], "alimenta": ["dir", "atr", "alt"]}, {"id": "atr", "padre": "mkt", "tipo": "agente", "estado": "ruta", "nombre": "Atribución por fuente", "icono": "target", "descripcion": "Cruza cada fuente y anuncio con el avance real en el pipeline: costo por visita y por reserva, no solo por lead.", "kpis": [], "corre": "Semanal (propuesto)", "plataforma": "barrio-ops", "herramientas": ["Meta Ads", "GHL", "Scoring"], "depende": ["rep", "sco"], "alimenta": ["dir"]}, {"id": "alt", "padre": "mkt", "tipo": "agente", "estado": "ruta", "nombre": "Alertas de pauta", "icono": "bell", "descripcion": "Avisa el mismo día cuando un anuncio gasta sin resultados, el costo por lead se dispara o un creativo se agota.", "kpis": [], "corre": "Diario (propuesto)", "plataforma": "barrio-ops", "herramientas": ["Meta Ads"], "depende": ["rep"], "alimenta": ["dir"]}, {"id": "cbot", "padre": "cal", "tipo": "agente", "estado": "siguiente", "nombre": "Calidad del asistente", "icono": "check", "descripcion": "Audita cada semana al asistente de WhatsApp: dónde se equivoca, qué promete sin cumplir, cuándo deriva mal y qué preguntas no sabe responder. Entrega mejoras concretas para su prompt.", "kpis": [], "corre": "Semanal (propuesto)", "plataforma": "barrio-ops", "herramientas": ["API de GHL", "Claude"], "depende": ["aud", "wsp"], "alimenta": ["wsp", "dir"]}, {"id": "sla", "padre": "cal", "tipo": "agente", "estado": "ruta", "nombre": "Nivel de servicio", "icono": "clock", "descripcion": "Mide los tiempos de respuesta del equipo y los compromisos cumplidos, como herramienta de coaching y no de control.", "kpis": [], "corre": "Semanal (propuesto)", "plataforma": "barrio-ops", "herramientas": ["Historial del auditor"], "depende": ["aud"], "alimenta": ["dir"]}, {"id": "hig", "padre": "cal", "tipo": "agente", "estado": "ruta", "nombre": "Higiene del CRM", "icono": "broom", "descripcion": "Detecta oportunidades en la etapa equivocada, tags que dejan leads fuera del bot y duplicados, y propone las correcciones.", "kpis": [], "corre": "Semanal (propuesto)", "plataforma": "barrio-ops", "herramientas": ["API de GHL"], "depende": [], "alimenta": ["wsp", "dir"]}]}</script>
+<script>
+(function () {
+  var D; try { D = JSON.parse(document.getElementById('equipoData').textContent); } catch (e) { return; }
+  var N = {}; D.nodos.forEach(function (n) { N[n.id] = n; });
+  var kids = function (id) { return D.nodos.filter(function (n) { return n.padre === id; }); };
+  var root = D.nodos.filter(function (n) { return !n.padre; })[0];
+  var ICON = {
+    crown: '<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>',
+    briefcase: '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/>',
+    speakerphone: '<path d="M18 8a3 3 0 0 1 0 6M10 8v11a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-5"/><path d="M12 8l4.7-3.1A.8.8 0 0 1 18 5.6v12.8a.8.8 0 0 1-1.3.7L12 16H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h8"/>',
+    shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+    message: '<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19.3z"/>',
+    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+    flame: '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.4-.5-2-1-3-1.1-2.1-.2-4.1 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.2.4-2.3 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    refresh: '<path d="M20 11A8 8 0 0 0 5.6 6.6L4 8M4 4v4h4M4 13a8 8 0 0 0 14.4 4.4L20 16M20 20v-4h-4"/>',
+    chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    bell: '<path d="M10 5a2 2 0 1 1 4 0 7 7 0 0 1 4 6v3l2 3H4l2-3v-3a7 7 0 0 1 4-6M9 17v1a3 3 0 0 0 6 0v-1"/>',
+    check: '<path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+    broom: '<path d="M20 4l-7 7M12.5 11.5l-6 6M6 14l4 4M4 20l2-2"/><path d="M9 11l4 4"/>'
+  };
+  var svg = function (k) { return '<svg viewBox="0 0 24 24" aria-hidden="true">' + (ICON[k] || '<circle cx="12" cy="12" r="4"/>') + '</svg>'; };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var ESTADO = { operando: 'Operando', piloto: 'Piloto', siguiente: 'Siguiente', ruta: 'Hoja de ruta', humano: 'Persona', area: 'Área' };
+  var sub = function (n) {
+    if (n.tipo === 'area') { var k = kids(n.id), op = k.filter(function (x) { return x.estado === 'operando' || x.estado === 'piloto'; }).length; return k.length + ' puestos · ' + op + ' activos'; }
+    if (n.persona) return n.persona;
+    if (n.kpis && n.kpis[0] && n.estado !== 'ruta') return n.kpis[0].v + ' · ' + n.kpis[0].n.toLowerCase();
+    return ESTADO[n.estado];
+  };
+  var chev = '<svg class="eq-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+  function nodeBtn(n, withChev) {
+    return '<button class="eq-node' + (n.estado === 'ruta' ? ' ruta' : '') + '" data-id="' + n.id + '">' +
+      '<span class="eq-ico">' + svg(n.icono) + '</span><span class="eq-nt"><span class="eq-nn">' + esc(n.nombre) + '</span>' +
+      '<div class="eq-ns">' + esc(sub(n)) + '</div></span>' + (n.tipo === 'area' ? '' : '<i class="eq-dot st-' + n.estado + '"></i>') + (withChev ? chev : '') + '</button>';
+  }
+  var tree = '<div class="eq-root" style="max-width:360px;margin:0 auto 6px">' + nodeBtn(root) + '</div><div class="eq-stem"></div>';
+  kids(root.id).forEach(function (a) {
+    tree += '<div class="eq-area" data-area="' + a.id + '">' + nodeBtn(a, true) + '<div class="eq-kids">' + kids(a.id).map(function (k) { return nodeBtn(k); }).join('') + '</div></div>';
+  });
+  var treeEl = document.getElementById('eqTree'); treeEl.innerHTML = tree;
+
+  function chain(n) { var c = []; while (n) { c.unshift(n); n = N[n.padre]; } return c; }
+  function links(ids) {
+    if (!ids || !ids.length) return '<span class="eq-persona">—</span>';
+    return '<div class="eq-tags">' + ids.map(function (i) { var x = N[i]; return '<button class="eq-link" data-go="' + i + '"><i class="eq-dot st-' + x.estado + '"></i>' + esc(x.nombre) + '</button>'; }).join('') + '</div>';
+  }
+  // KPIs en vivo: se leen de la fila TOTAL de las tablas del Resumen ejecutivo (respetan el filtro de fechas)
+  var COL = { 'fr:gasto': ['frBody', [1]], 'fr:resultados': ['frBody', [8]], 'fr:calificados': ['frBody', [10]], 'fr:costo_calif': ['frBody', [13]],
+              'fe:total': ['feBody', [10]], 'fe:descartado': ['feBody', [9]], 'fe:derivados': ['feBody', [5, 6, 7]] };
+  function vivo(src) {
+    var c = COL[src], tb = c && document.getElementById(c[0]); if (!tb) return '—';
+    var tr = tb.querySelector('tr.tot'); if (!tr) return '—';
+    var td = tr.children;
+    if (c[1].length === 1) return td[c[1][0]] ? td[c[1][0]].textContent.trim() : '—';
+    var sum = 0; c[1].forEach(function (i) { sum += parseInt((td[i] ? td[i].textContent : '0').replace(/[^0-9]/g, ''), 10) || 0; });
+    return sum.toLocaleString('es-CL');
+  }
+  function periodo() { var b = document.querySelector('.filter-btn.active'); return b ? b.textContent.trim() : 'período'; }
+  var cur;
+  function render(id) {
+    cur = id;
+    var n = N[id]; if (!n) return;
+    treeEl.querySelectorAll('.eq-node').forEach(function (b) { b.classList.toggle('sel', b.dataset.id === id); });
+    var area = n.tipo === 'area' ? n.id : (N[n.padre] && N[n.padre].tipo === 'area' ? n.padre : null);
+    if (area) treeEl.querySelector('.eq-area[data-area="' + area + '"]').classList.add('open');
+    var h = '<div class="eq-crumb">' + chain(n).map(function (c, i, a) { return i < a.length - 1 ? '<a data-go="' + c.id + '">' + esc(c.nombre) + '</a> › ' : '<b>' + esc(c.nombre) + '</b>'; }).join('') + '</div>';
+    h += '<div class="eq-h"><span class="eq-ico">' + svg(n.icono) + '</span><div><h3>' + esc(n.nombre) + '</h3>' +
+      '<div class="eq-persona">' + (n.persona ? esc(n.persona) + ' · ' : '') + '<span class="eq-chip ch-' + n.estado + '">' + ESTADO[n.estado] + '</span>' + (n.plataforma ? ' · ' + esc(n.plataforma) : '') + '</div></div></div>';
+    h += '<div class="eq-desc">' + esc(n.descripcion) + '</div>';
+    if (n.kpis && n.kpis.length) {
+      h += '<div class="eq-sec">' + (n.estado === 'ruta' || n.estado === 'siguiente' ? 'Lo que movería' : 'KPIs críticos') + '</div><div class="eq-kpis">' +
+        n.kpis.map(function (k) { var v = k.src ? vivo(k.src) : k.v; return '<div class="eq-kpi' + (k.alerta ? ' alerta' : '') + '"><div class="kl">' + esc(k.n) + (k.src ? ' <span class="eq-per">· ' + esc(periodo()) + '</span>' : '') + '</div><div class="kv">' + esc(v) + '</div></div>'; }).join('') + '</div>';
+    }
+    if (n.tipo === 'area') {
+      h += '<div class="eq-sec">Puestos del área</div>' + links(kids(n.id).map(function (k) { return k.id; }));
+    } else if (n.tipo === 'humano') {
+      if (n.recibe) h += '<div class="eq-sec">Recibe</div><ul class="eq-list">' + n.recibe.map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul>';
+      var aCargo = D.nodos.filter(function (x) { return (x.alimenta || []).indexOf(n.id) >= 0; }).map(function (x) { return x.id; });
+      if (aCargo.length) h += '<div class="eq-sec">Agentes que le entregan trabajo</div>' + links(aCargo);
+    } else {
+      h += '<div class="eq-sec">Operación</div><div class="eq-facts">';
+      if (n.corre) h += '<div class="eq-fact"><b>Cuándo corre</b>' + esc(n.corre) + '</div>';
+      if (n.ultima) h += '<div class="eq-fact"><b>Última corrida</b>' + esc(n.ultima) + ' · <span class="eq-ok">' + (n.resultado === 'ok' ? '✓ OK' : esc(n.resultado)) + '</span><br><span class="eq-persona">' + esc(n.resultado_txt || '') + '</span></div>';
+      h += '</div>';
+      if (n.herramientas) h += '<div class="eq-sec">Herramientas que necesita</div><div class="eq-tags">' + n.herramientas.map(function (t) { return '<span class="eq-tag">' + esc(t) + '</span>'; }).join('') + '</div>';
+      if (n.insumos || n.entregables) {
+        h += '<div class="eq-two"><div><div class="eq-sec">Trabaja con</div><ul class="eq-list">' + (n.insumos || ['—']).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul></div>' +
+          '<div><div class="eq-sec">Entrega</div><ul class="eq-list">' + (n.entregables || ['—']).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('') + '</ul></div></div>';
+      }
+      h += '<div class="eq-two"><div><div class="eq-sec">Depende de</div>' + links(n.depende) + '</div><div><div class="eq-sec">Alimenta a</div>' + links(n.alimenta) + '</div></div>';
+    }
+    var p = document.getElementById('eqPanel'); p.innerHTML = h;
+    if (window.innerWidth < 860 && window.__eqTouched) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  document.getElementById('tab-equipo').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-go],.eq-node'); if (!t) return;
+    window.__eqTouched = true;
+    var id = t.dataset.go || t.dataset.id, n = N[id];
+    if (t.classList.contains('eq-node') && n.tipo === 'area') {
+      var a = t.parentElement; if (a.classList.contains('open') && t.classList.contains('sel')) { a.classList.remove('open'); return; }
+    }
+    render(id);
+  });
+  var activos = D.nodos.filter(function (n) { return n.estado === 'operando' || n.estado === 'piloto'; }).length;
+  var agentes = D.nodos.filter(function (n) { return n.tipo === 'agente'; }).length;
+  document.getElementById('eqSub').textContent = activos + ' agentes activos de ' + agentes + ' planificados · 2 personas · toca un área para entrar y un puesto para ver su ficha';
+  render(root.id);
+  document.addEventListener('tabshow', function (e) { if (e.detail === 'equipo') render(cur); });
+})();
+</script>
+<!-- EQUIPO:END -->
+<div class="footer">
     M2100 &middot; Av. Santa Mar&iacute;a 2100, Pedro de Valdivia Norte, Providencia &middot; Reporte generado el 24 sep 2026<br>
     <span id="footerWindow">Fuente: Meta Ads API v25.0 + GoHighLevel API v2</span>
   </div>
@@ -1312,6 +1688,47 @@
   render('30d');
   </script>
 
-  </body>
+  <!-- PERIODO:START -->
+<script>
+/* Ventana "Todo el período": desde la fecha más antigua con datos (Meta o GHL) hasta ayer.
+   Se calcula del RAW en cada carga, así crece sola con la historia acumulada. */
+(function () {
+  try {
+    if (typeof WINDOWS === 'undefined' || typeof RAW === 'undefined' || !YESTERDAY) return;
+    var fechas = JSON.stringify(RAW).match(/20\d\d-\d\d-\d\d/g) || [];
+    var min = null;
+    fechas.forEach(function (f) { if (f >= '2024-01-01' && f <= YESTERDAY && (!min || f < min)) min = f; });
+    if (!min) return;
+    var dias = Math.round((Date.parse(YESTERDAY + 'T00:00:00Z') - Date.parse(min + 'T00:00:00Z')) / 86400000) + 1;
+    WINDOWS.all = { days: dias, label: 'Todo el período' };
+  } catch (e) {
+    var b = document.querySelector('.filter-btn[data-key="all"]'); if (b) b.style.display = 'none';
+  }
+})();
+</script>
+<!-- PERIODO:END -->
+
+<!-- TABSJS:START -->
+<script>
+(function () {
+  var TABS = ['resumen', 'performance', 'scoring', 'equipo'];
+  var fbar = document.getElementById('filterBar');
+  var btns = document.querySelectorAll('#tabBar .tabbtn');
+  function show(t) {
+    if (TABS.indexOf(t) < 0) t = 'resumen';
+    btns.forEach(function (b) { b.classList.toggle('active', b.dataset.tab === t); b.setAttribute('aria-selected', b.dataset.tab === t); });
+    TABS.forEach(function (k) { var el = document.getElementById('tab-' + k); if (el) el.style.display = k === t ? '' : 'none'; });
+    if (fbar) fbar.style.display = (t === 'resumen' || t === 'performance') ? '' : 'none';  /* el filtro de fechas solo aplica a resumen y performance */
+    try { history.replaceState(null, '', t === 'resumen' ? location.pathname + location.search : '#' + t); } catch (e) {}
+    window.scrollTo(0, 0);
+    try { document.dispatchEvent(new CustomEvent('tabshow', { detail: t })); } catch (e) {}
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
+  show((location.hash || '').replace('#', ''));
+})();
+</script>
+<!-- TABSJS:END -->
+
+</body>
 </html>
 
