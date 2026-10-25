@@ -1,0 +1,20 @@
+<!-- TABSJS:START -->
+<script>
+(function () {
+  var TABS = ['resumen', 'performance', 'scoring', 'equipo'];
+  var fbar = document.getElementById('filterBar');
+  var btns = document.querySelectorAll('#tabBar .tabbtn');
+  function show(t) {
+    if (TABS.indexOf(t) < 0) t = 'resumen';
+    btns.forEach(function (b) { b.classList.toggle('active', b.dataset.tab === t); b.setAttribute('aria-selected', b.dataset.tab === t); });
+    TABS.forEach(function (k) { var el = document.getElementById('tab-' + k); if (el) el.style.display = k === t ? '' : 'none'; });
+    if (fbar) fbar.style.display = (t === 'resumen' || t === 'performance') ? '' : 'none';  /* el filtro de fechas solo aplica a resumen y performance */
+    try { history.replaceState(null, '', t === 'resumen' ? location.pathname + location.search : '#' + t); } catch (e) {}
+    window.scrollTo(0, 0);
+    try { document.dispatchEvent(new CustomEvent('tabshow', { detail: t })); } catch (e) {}
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.tab); }); });
+  show((location.hash || '').replace('#', ''));
+})();
+</script>
+<!-- TABSJS:END -->

@@ -1,0 +1,156 @@
+<!-- SCORING:START -->
+<style>
+  .sc-temp{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9.5px;font-weight:700;white-space:nowrap;letter-spacing:.2px}
+  .sc-CALIENTE{background:#FBE6E5;color:#B23A38}.sc-TIBIO{background:#F6ECD9;color:#8A5A1E}.sc-FRIO{background:#E1F3EA;color:#0F7A4E}
+  .sc-k-CALIENTE{border-left:4px solid #E24B4A}.sc-k-TIBIO{border-left:4px solid #D99A2B}.sc-k-FRIO{border-left:4px solid #1D9E75}
+  .sc-filters{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}
+  .sc-fbtn{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:7px 16px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;transition:.15s;font-family:inherit}
+  .sc-fbtn:hover{border-color:var(--text);color:var(--text)}
+  .sc-fbtn.active{background:var(--text);color:#fff;border-color:var(--text)}
+  .sc-score{display:flex;align-items:center;gap:8px;justify-content:flex-start}
+  .sc-num{font-size:15px;font-weight:700;min-width:24px;text-align:right}
+  .sc-bar{flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;min-width:40px}
+  .sc-bar span{display:block;height:100%;border-radius:3px}
+  .sc-trend{font-size:10px;font-weight:700}
+  .sc-up{color:#0F7A4E}.sc-down{color:#B23A38}
+  #scTable td{white-space:normal;text-align:left;vertical-align:top;line-height:1.4}
+  #scTable th{text-align:left}
+  #scTable tr.sc-row{cursor:pointer}
+  #scTable tr.sc-det td{background:var(--bg2);font-size:11px;color:var(--text);padding:10px 12px 12px}
+  #scTable tr.sc-det:hover td{background:var(--bg2)}
+  .sc-det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 22px}
+  .sc-det-grid b{display:block;font-size:9.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+  .sc-det-grid ul{padding-left:16px}
+  .sc-name{font-weight:700;font-size:11.5px}
+  .sc-muted{color:var(--text2);font-size:10.5px}
+  .sc-old{color:#B23A38;font-weight:600}
+  .sc-empty{padding:28px;text-align:center;color:var(--text2);font-size:13px}
+  .sc-mobile-only{display:none}
+  @media (max-width:760px){ #scTable .sc-hide-m{display:none} .sc-mobile-only{display:block} #scEtTable th{letter-spacing:0;font-size:8.5px} }
+</style>
+
+<div id="tab-scoring" style="display:none">
+  <div class="section-block">
+    <div class="section-title">Scoring IA &middot; leads m&aacute;s dispuestos a cerrar</div>
+    <div class="section-sub" id="scSub"></div>
+
+    <div class="ks" id="scKpis"></div>
+
+    <div class="ct">Distribuci&oacute;n por etapa</div>
+    <table id="scEtTable" style="margin-bottom:22px">
+      <colgroup><col style="width:28%"><col style="width:18%"><col style="width:18%"><col style="width:18%"><col style="width:18%"></colgroup>
+      <thead><tr><th style="text-align:left">Etapa</th><th>Calientes</th><th>Tibios</th><th>Fr&iacute;os</th><th>Total</th></tr></thead>
+      <tbody id="scEtapas"></tbody>
+    </table>
+
+    <div class="ct">Ranking por probabilidad de reserva</div>
+    <div class="sc-filters" id="scFilters">
+      <button class="sc-fbtn active" data-t="ALL">Todos</button>
+      <button class="sc-fbtn" data-t="CALIENTE">Calientes</button>
+      <button class="sc-fbtn" data-t="TIBIO">Tibios</button>
+      <button class="sc-fbtn" data-t="FRIO">Fr&iacute;os</button>
+    </div>
+    <table id="scTable">
+      <colgroup><col style="width:4%"><col style="width:15%"><col style="width:13%"><col style="width:9%"><col style="width:10%"><col style="width:22%" class="sc-hide-m"><col style="width:17%" class="sc-hide-m"><col style="width:10%"></colgroup>
+      <thead><tr>
+        <th>#</th><th>Nombre</th><th>Score</th><th>Temp.</th><th>Etapa</th>
+        <th class="sc-hide-m">Antecedentes</th><th class="sc-hide-m">Siguiente paso</th><th>&Uacute;lt. mensaje<br>del cliente</th>
+      </tr></thead>
+      <tbody id="scBody"></tbody>
+    </table>
+    <div class="sn" id="scNote"></div>
+  </div>
+</div>
+
+<script id="scoringData" type="application/json">__SCORING_JSON__</script>
+<script>
+(function () {
+  var raw = document.getElementById('scoringData').textContent;
+  var D = null;
+  try { D = JSON.parse(raw); } catch (e) { D = null; }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  function fecha(iso) { if (!iso) return ''; var d = iso.slice(0, 10).split('-'); return parseInt(d[2], 10) + ' ' + MESES[parseInt(d[1], 10) - 1]; }
+  var TL = { CALIENTE: 'Caliente', TIBIO: 'Tibio', FRIO: 'Frío' };
+  var TC = { CALIENTE: '#E24B4A', TIBIO: '#D99A2B', FRIO: '#1D9E75' };
+
+  if (!D || !D.ranking) {
+    document.getElementById('scSub').textContent = 'Sin datos de scoring disponibles para este reporte.';
+    document.getElementById('scBody').innerHTML = '<tr><td colspan="8" class="sc-empty">El agente de scoring todavía no ha corrido.</td></tr>';
+  } else {
+    var c = D.conteo || {};
+    var total = (c.CALIENTE || 0) + (c.TIBIO || 0) + (c.FRIO || 0);
+    var badge = document.getElementById('scBadge');
+    if (badge) badge.textContent = (c.CALIENTE || 0) + ((c.CALIENTE || 0) === 1 ? ' caliente' : ' calientes');
+    document.getElementById('scSub').innerHTML = 'Probabilidad de que el lead reserve en las pr&oacute;ximas 4 semanas (1 a 100), le&iacute;da por IA desde WhatsApp en GHL &middot; corte ' +
+      esc(fecha(D.corte)) + ' ' + esc((D.corte || '').slice(11, 16)) + ' &middot; <b>no depende del filtro de fechas</b>';
+
+    var k = '';
+    [['CALIENTE', 'Calientes', '≥ ' + D.umbrales.caliente], ['TIBIO', 'Tibios', D.umbrales.tibio + '–' + (D.umbrales.caliente - 1)], ['FRIO', 'Fríos', '< ' + D.umbrales.tibio]].forEach(function (x) {
+      k += '<div class="k sc-k-' + x[0] + '"><div class="kl">' + x[1] + '</div><div class="kv">' + (c[x[0]] || 0) + '</div><div class="ks2">score ' + x[2] + '</div></div>';
+    });
+    var top10 = D.ranking.slice(0, 10), prom = top10.length ? Math.round(top10.reduce(function (a, r) { return a + r.score; }, 0) / top10.length) : 0;
+    k += '<div class="k"><div class="kl">Leads puntuados</div><div class="kv">' + total + '</div><div class="ks2">Para Caro, Visita y Post visita</div></div>';
+    k += '<div class="k"><div class="kl">Score prom. top 10</div><div class="kv">' + prom + '</div><div class="ks2">de 100</div></div>';
+    document.getElementById('scKpis').innerHTML = k;
+
+    var et = '', ce = D.conteo_por_etapa || {};
+    Object.keys(ce).forEach(function (e) {
+      var v = ce[e], t = (v.CALIENTE || 0) + (v.TIBIO || 0) + (v.FRIO || 0);
+      et += '<tr><td>' + esc(e) + '</td><td>' + (v.CALIENTE || 0) + '</td><td>' + (v.TIBIO || 0) + '</td><td>' + (v.FRIO || 0) + '</td><td><b>' + t + '</b></td></tr>';
+    });
+    et += '<tr class="tot"><td>Total</td><td>' + (c.CALIENTE || 0) + '</td><td>' + (c.TIBIO || 0) + '</td><td>' + (c.FRIO || 0) + '</td><td>' + total + '</td></tr>';
+    document.getElementById('scEtapas').innerHTML = et;
+
+    function filas(filtro) {
+      var h = '';
+      D.ranking.forEach(function (r, i) {
+        if (filtro !== 'ALL' && r.temperatura !== filtro) return;
+        var tr = '';
+        if (r.score_anterior != null && r.score_anterior !== r.score) {
+          var dlt = r.score - r.score_anterior;
+          tr = '<span class="sc-trend ' + (dlt > 0 ? 'sc-up">▲ ' : 'sc-down">▼ ') + Math.abs(dlt) + '</span>';
+        }
+        var dias = r.dias_sin_cliente;
+        var ult = r.ultimo_cliente_iso ? esc(fecha(r.ultimo_cliente_iso)) + '<br><span class="sc-muted' + (dias > 14 ? ' sc-old' : '') + '">' +
+          (dias === 0 ? 'hoy' : dias === 1 ? 'ayer' : 'hace ' + dias + ' días') + '</span>' : '<span class="sc-muted">nunca escribió</span>';
+        h += '<tr class="sc-row" data-i="' + i + '">' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td><span class="sc-name">' + esc(r.nombre) + '</span>' + (r.confianza === 'BAJA' ? '<br><span class="sc-muted">poca información</span>' : '') + '</td>' +
+          '<td><div class="sc-score"><span class="sc-num" style="color:' + TC[r.temperatura] + '">' + r.score + '</span><div class="sc-bar"><span style="width:' + r.score + '%;background:' + TC[r.temperatura] + '"></span></div>' + tr + '</div></td>' +
+          '<td><span class="sc-temp sc-' + r.temperatura + '">' + TL[r.temperatura] + '</span></td>' +
+          '<td>' + esc(r.etapa) + '</td>' +
+          '<td class="sc-hide-m">' + esc(r.antecedentes) + '</td>' +
+          '<td class="sc-hide-m">' + esc(r.siguiente_paso) + '</td>' +
+          '<td>' + ult + '</td></tr>';
+        var sen = (r.senales || []).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
+        h += '<tr class="sc-det" data-d="' + i + '" style="display:none"><td></td><td colspan="7"><div class="sc-det-grid">' +
+          '<div><b>Señales</b>' + (sen ? '<ul>' + sen + '</ul>' : '—') + '</div>' +
+          '<div><b>Objeción principal</b>' + (r.objecion ? esc(r.objecion) : 'Sin objeción visible') + '</div>' +
+          '<div><b>Conversación</b>' + (r.mensajes_cliente || 0) + ' mensajes del cliente (últimos 40) · último en escribir: ' + esc(r.ultimo_msg_de || '—') +
+          (r.ultimo_msg_iso ? ' el ' + esc(fecha(r.ultimo_msg_iso)) : '') + '</div>' +
+          '<div class="sc-mobile-only"><b>Antecedentes</b>' + esc(r.antecedentes) + '<br><br><b>Siguiente paso</b>' + esc(r.siguiente_paso) + '</div>' +
+          '</div></td></tr>';
+      });
+      document.getElementById('scBody').innerHTML = h || '<tr><td colspan="8" class="sc-empty">No hay leads en esta categoría dentro del top.</td></tr>';
+    }
+    filas('ALL');
+    document.getElementById('scBody').addEventListener('click', function (ev) {
+      var row = ev.target.closest('tr.sc-row'); if (!row) return;
+      var det = document.querySelector('tr.sc-det[data-d="' + row.dataset.i + '"]');
+      if (det) det.style.display = det.style.display === 'none' ? '' : 'none';
+    });
+    document.querySelectorAll('#scFilters .sc-fbtn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('#scFilters .sc-fbtn').forEach(function (x) { x.classList.toggle('active', x === b); });
+        filas(b.dataset.t);
+      });
+    });
+    document.getElementById('scNote').innerHTML = 'Top ' + D.ranking.length + ' de ' + total + ' leads abiertos en Para Caro, Visita y Seg. Post Visita. Score calculado por IA leyendo los últimos 40 mensajes de WhatsApp de cada lead; ' +
+      'se recalcula si hay mensajes nuevos, cambio de etapa o cada 3 días. ▲▼ = cambio desde el score anterior. Toca una fila para ver señales, objeción y detalle de la conversación. ' +
+      'La IA solo ve WhatsApp: llamadas o visitas no registradas no se reflejan.';
+  }
+})();
+</script>
+<!-- SCORING:END -->

@@ -1,0 +1,493 @@
+{
+ "actualizado": "2026-10-24T22:21",
+ "nodos": [
+  {
+   "id": "dir",
+   "padre": null,
+   "tipo": "humano",
+   "estado": "humano",
+   "nombre": "Dirección",
+   "persona": "Gianfranco Lutjens",
+   "icono": "crown",
+   "descripcion": "Define la estrategia comercial y de marketing de M2100, prioriza el trabajo de los agentes y toma las decisiones que la IA no toma: precios, descuentos, presupuesto de pauta y cambios en el equipo.",
+   "kpis": [
+    {
+     "n": "Oportunidades en etapas avanzadas",
+     "v": "141"
+    },
+    {
+     "n": "Leads calientes hoy",
+     "v": "1"
+    },
+    {
+     "n": "Gasto Meta",
+     "src": "fr:gasto"
+    }
+   ],
+   "recibe": [
+    "Reporte nocturno",
+    "Scoring diario (piloto)",
+    "Copia de la auditoría diaria"
+   ]
+  },
+  {
+   "id": "com",
+   "padre": "dir",
+   "tipo": "area",
+   "estado": "area",
+   "nombre": "Comercial",
+   "icono": "briefcase",
+   "descripcion": "Convierte conversaciones de WhatsApp en visitas y reservas. Los agentes atienden, priorizan y detectan pendientes; la ejecutiva cierra.",
+   "kpis": [
+    {
+     "n": "Oportunidades en Para Caro, Visita y Post visita",
+     "v": "141"
+    },
+    {
+     "n": "Leads que esperan respuesta hoy",
+     "v": "13",
+     "alerta": true
+    },
+    {
+     "n": "Derivados a la ejecutiva",
+     "src": "fe:derivados"
+    }
+   ]
+  },
+  {
+   "id": "mkt",
+   "padre": "dir",
+   "tipo": "area",
+   "estado": "area",
+   "nombre": "Marketing",
+   "icono": "speakerphone",
+   "descripcion": "Trae leads al menor costo por lead calificado y mide qué fuente y qué anuncio funcionan de verdad.",
+   "kpis": [
+    {
+     "n": "Gasto Meta",
+     "src": "fr:gasto"
+    },
+    {
+     "n": "Leads calificados",
+     "src": "fr:calificados"
+    },
+    {
+     "n": "Costo por calificado",
+     "src": "fr:costo_calif"
+    }
+   ]
+  },
+  {
+   "id": "cal",
+   "padre": "dir",
+   "tipo": "area",
+   "estado": "area",
+   "nombre": "Calidad y operaciones",
+   "icono": "shield",
+   "descripcion": "Vigila que el bot responda bien, que el equipo cumpla los tiempos de respuesta y que el CRM refleje la realidad.",
+   "kpis": [
+    {
+     "n": "Puestos operando",
+     "v": "0 de 3"
+    },
+    {
+     "n": "Siguiente a construir",
+     "v": "Calidad del asistente"
+    }
+   ]
+  },
+  {
+   "id": "wsp",
+   "padre": "com",
+   "tipo": "agente",
+   "estado": "operando",
+   "nombre": "Asistente WhatsApp",
+   "icono": "message",
+   "descripcion": "Responde 24/7 a los leads que llegan por WhatsApp, entrega precios desde el primer mensaje, califica y deriva a la ejecutiva cuando el lead está listo. Después del traspaso se calla.",
+   "kpis": [
+    {
+     "n": "Oportunidades nuevas",
+     "src": "fe:total"
+    },
+    {
+     "n": "Derivados a la ejecutiva",
+     "src": "fe:derivados"
+    },
+    {
+     "n": "Descartadas",
+     "src": "fe:descartado",
+     "alerta": true
+    }
+   ],
+   "corre": "Siempre activo · responde en minutos",
+   "plataforma": "GHL Conversation AI",
+   "herramientas": [
+    "GoHighLevel (CRM y WhatsApp)",
+    "Base de conocimiento con inventario de 9 unidades",
+    "Workflows de traspaso y red de seguridad (5 días)"
+   ],
+   "insumos": [
+    "Mensajes entrantes de WhatsApp",
+    "Lista de precios vigente (campaña IVA)"
+   ],
+   "entregables": [
+    "Conversación calificada",
+    "Lead derivado a Para Caro con tag de traspaso"
+   ],
+   "depende": [],
+   "alimenta": [
+    "aud",
+    "cbot",
+    "car"
+   ]
+  },
+  {
+   "id": "aud",
+   "padre": "com",
+   "tipo": "agente",
+   "estado": "operando",
+   "nombre": "Auditor de conversaciones",
+   "icono": "eye",
+   "descripcion": "Cada madrugada lee las conversaciones de las etapas avanzadas y detecta a qué leads les debemos algo: una pregunta sin respuesta, una promesa incumplida o una visita sin hora. Le entrega a la ejecutiva una lista accionable.",
+   "kpis": [
+    {
+     "n": "Oportunidades auditadas",
+     "v": "141"
+    },
+    {
+     "n": "Leads en rojo (le debemos algo)",
+     "v": "13",
+     "alerta": true
+    },
+    {
+     "n": "Rojos nuevos hoy",
+     "v": "1"
+    },
+    {
+     "n": "Errores de clasificación",
+     "v": "0"
+    }
+   ],
+   "ultima": "24 oct · 05:52",
+   "resultado": "ok",
+   "resultado_txt": "Correo enviado a Carolina, Gianfranco y Jorge",
+   "corre": "Diario desde la 01:00 (hora Chile) · un envío por día",
+   "plataforma": "GitHub Actions · barrio-ops",
+   "herramientas": [
+    "API de GHL (solo lectura)",
+    "Claude Sonnet 5.5 (workspace M2100)",
+    "Gmail (envío del correo)",
+    "Estado diario en repositorio privado"
+   ],
+   "insumos": [
+    "Conversaciones de WhatsApp de Para Caro, Visita y Post visita",
+    "Estado de la corrida anterior"
+   ],
+   "entregables": [
+    "Correo diario con tarjetas por lead (semáforo, qué hacer, evidencia)"
+   ],
+   "depende": [
+    "wsp"
+   ],
+   "alimenta": [
+    "sco",
+    "car",
+    "cbot",
+    "sla"
+   ]
+  },
+  {
+   "id": "sco",
+   "padre": "com",
+   "tipo": "agente",
+   "estado": "piloto",
+   "nombre": "Scoring de leads",
+   "icono": "flame",
+   "descripcion": "Puntúa de 1 a 100 la probabilidad de que cada lead reserve en las próximas 4 semanas y arma el ranking de los más dispuestos a cerrar, con su siguiente paso.",
+   "kpis": [
+    {
+     "n": "Leads puntuados",
+     "v": "141"
+    },
+    {
+     "n": "Calientes (≥70)",
+     "v": "1"
+    },
+    {
+     "n": "Tibios (40-69)",
+     "v": "16"
+    },
+    {
+     "n": "Lead #1 del ranking",
+     "v": "Enzzo Moena · 72"
+    }
+   ],
+   "ultima": "24 oct · 22:21",
+   "resultado": "ok",
+   "resultado_txt": "Corrida de prueba · correo solo a Gianfranco",
+   "corre": "Diario, misma ventana que el auditor",
+   "plataforma": "GitHub Actions · barrio-ops",
+   "herramientas": [
+    "API de GHL (solo lectura)",
+    "Claude Sonnet 5.5 (workspace M2100)",
+    "Gmail (envío del ranking)",
+    "Estado y tendencia en repositorio privado"
+   ],
+   "insumos": [
+    "Conversaciones de WhatsApp de las etapas avanzadas",
+    "Score anterior de cada lead"
+   ],
+   "entregables": [
+    "Correo con el top 15",
+    "Pestaña Scoring IA de este reporte"
+   ],
+   "depende": [
+    "aud"
+   ],
+   "alimenta": [
+    "post",
+    "react",
+    "dir",
+    "car"
+   ]
+  },
+  {
+   "id": "car",
+   "padre": "com",
+   "tipo": "humano",
+   "estado": "humano",
+   "nombre": "Ejecutiva comercial",
+   "persona": "Carolina Climent",
+   "icono": "user",
+   "descripcion": "Recibe los leads listos del asistente y las listas de los agentes, coordina visitas y lleva la negociación hasta la reserva. Es quien cierra.",
+   "kpis": [
+    {
+     "n": "Leads que esperan respuesta hoy",
+     "v": "13",
+     "alerta": true
+    },
+    {
+     "n": "En visita o post visita",
+     "v": "109"
+    }
+   ],
+   "recibe": [
+    "Correo diario del auditor",
+    "Leads derivados por el asistente"
+   ]
+  },
+  {
+   "id": "post",
+   "padre": "com",
+   "tipo": "agente",
+   "estado": "ruta",
+   "nombre": "Seguimiento post-visita",
+   "icono": "home",
+   "descripcion": "Para cada lead que visitó, prepara el seguimiento: qué preguntó, qué objeción tuvo, qué enviarle y cuándo. Ataca la etapa de mayor valor del embudo.",
+   "kpis": [
+    {
+     "n": "Leads en Visita o Post visita",
+     "v": "109"
+    }
+   ],
+   "corre": "Diario (propuesto)",
+   "plataforma": "barrio-ops",
+   "herramientas": [
+    "API de GHL",
+    "Claude",
+    "Cotizador"
+   ],
+   "depende": [
+    "sco",
+    "aud"
+   ],
+   "alimenta": [
+    "car"
+   ]
+  },
+  {
+   "id": "react",
+   "padre": "com",
+   "tipo": "agente",
+   "estado": "ruta",
+   "nombre": "Reactivador",
+   "icono": "refresh",
+   "descripcion": "Redacta mensajes de reactivación para leads tibios que dejaron de responder. La ejecutiva los aprueba; nunca sale nada automático.",
+   "kpis": [
+    {
+     "n": "Leads tibios hoy",
+     "v": "16"
+    }
+   ],
+   "corre": "Semanal (propuesto)",
+   "plataforma": "barrio-ops",
+   "herramientas": [
+    "API de GHL",
+    "Claude"
+   ],
+   "depende": [
+    "sco"
+   ],
+   "alimenta": [
+    "car"
+   ]
+  },
+  {
+   "id": "rep",
+   "padre": "mkt",
+   "tipo": "agente",
+   "estado": "operando",
+   "nombre": "Reporte nocturno",
+   "icono": "chart",
+   "descripcion": "Cada noche consolida Meta Ads y GHL, arma este reporte con filtros de fecha, insights por rol y la pestaña de scoring, y lo publica.",
+   "kpis": [
+    {
+     "n": "Resultados Meta",
+     "src": "fr:resultados"
+    },
+    {
+     "n": "Leads calificados",
+     "src": "fr:calificados"
+    },
+    {
+     "n": "Costo por calificado",
+     "src": "fr:costo_calif"
+    }
+   ],
+   "ultima": "24 oct · 04:17",
+   "resultado": "ok",
+   "resultado_txt": "Reporte publicado",
+   "corre": "Diario a las 03:15 (hora Chile)",
+   "plataforma": "Tarea programada de Claude",
+   "herramientas": [
+    "Google Sheets + Apps Script (extracción 2-3 am)",
+    "Meta Ads API",
+    "GHL API",
+    "GitHub Pages"
+   ],
+   "insumos": [
+    "Sheet de extracción",
+    "Scoring del día"
+   ],
+   "entregables": [
+    "Este reporte"
+   ],
+   "depende": [],
+   "alimenta": [
+    "dir",
+    "atr",
+    "alt"
+   ]
+  },
+  {
+   "id": "atr",
+   "padre": "mkt",
+   "tipo": "agente",
+   "estado": "ruta",
+   "nombre": "Atribución por fuente",
+   "icono": "target",
+   "descripcion": "Cruza cada fuente y anuncio con el avance real en el pipeline: costo por visita y por reserva, no solo por lead.",
+   "kpis": [],
+   "corre": "Semanal (propuesto)",
+   "plataforma": "barrio-ops",
+   "herramientas": [
+    "Meta Ads",
+    "GHL",
+    "Scoring"
+   ],
+   "depende": [
+    "rep",
+    "sco"
+   ],
+   "alimenta": [
+    "dir"
+   ]
+  },
+  {
+   "id": "alt",
+   "padre": "mkt",
+   "tipo": "agente",
+   "estado": "ruta",
+   "nombre": "Alertas de pauta",
+   "icono": "bell",
+   "descripcion": "Avisa el mismo día cuando un anuncio gasta sin resultados, el costo por lead se dispara o un creativo se agota.",
+   "kpis": [],
+   "corre": "Diario (propuesto)",
+   "plataforma": "barrio-ops",
+   "herramientas": [
+    "Meta Ads"
+   ],
+   "depende": [
+    "rep"
+   ],
+   "alimenta": [
+    "dir"
+   ]
+  },
+  {
+   "id": "cbot",
+   "padre": "cal",
+   "tipo": "agente",
+   "estado": "siguiente",
+   "nombre": "Calidad del asistente",
+   "icono": "check",
+   "descripcion": "Audita cada semana al asistente de WhatsApp: dónde se equivoca, qué promete sin cumplir, cuándo deriva mal y qué preguntas no sabe responder. Entrega mejoras concretas para su prompt.",
+   "kpis": [],
+   "corre": "Semanal (propuesto)",
+   "plataforma": "barrio-ops",
+   "herramientas": [
+    "API de GHL",
+    "Claude"
+   ],
+   "depende": [
+    "aud",
+    "wsp"
+   ],
+   "alimenta": [
+    "wsp",
+    "dir"
+   ]
+  },
+  {
+   "id": "sla",
+   "padre": "cal",
+   "tipo": "agente",
+   "estado": "ruta",
+   "nombre": "Nivel de servicio",
+   "icono": "clock",
+   "descripcion": "Mide los tiempos de respuesta del equipo y los compromisos cumplidos, como herramienta de coaching y no de control.",
+   "kpis": [],
+   "corre": "Semanal (propuesto)",
+   "plataforma": "barrio-ops",
+   "herramientas": [
+    "Historial del auditor"
+   ],
+   "depende": [
+    "aud"
+   ],
+   "alimenta": [
+    "dir"
+   ]
+  },
+  {
+   "id": "hig",
+   "padre": "cal",
+   "tipo": "agente",
+   "estado": "ruta",
+   "nombre": "Higiene del CRM",
+   "icono": "broom",
+   "descripcion": "Detecta oportunidades en la etapa equivocada, tags que dejan leads fuera del bot y duplicados, y propone las correcciones.",
+   "kpis": [],
+   "corre": "Semanal (propuesto)",
+   "plataforma": "barrio-ops",
+   "herramientas": [
+    "API de GHL"
+   ],
+   "depende": [],
+   "alimenta": [
+    "wsp",
+    "dir"
+   ]
+  }
+ ]
+}

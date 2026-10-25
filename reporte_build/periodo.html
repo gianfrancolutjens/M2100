@@ -1,0 +1,19 @@
+<!-- PERIODO:START -->
+<script>
+/* Ventana "Todo el período": desde la fecha más antigua con datos (Meta o GHL) hasta ayer.
+   Se calcula del RAW en cada carga, así crece sola con la historia acumulada. */
+(function () {
+  try {
+    if (typeof WINDOWS === 'undefined' || typeof RAW === 'undefined' || !YESTERDAY) return;
+    var fechas = JSON.stringify(RAW).match(/20\d\d-\d\d-\d\d/g) || [];
+    var min = null;
+    fechas.forEach(function (f) { if (f >= '2024-01-01' && f <= YESTERDAY && (!min || f < min)) min = f; });
+    if (!min) return;
+    var dias = Math.round((Date.parse(YESTERDAY + 'T00:00:00Z') - Date.parse(min + 'T00:00:00Z')) / 86400000) + 1;
+    WINDOWS.all = { days: dias, label: 'Todo el período' };
+  } catch (e) {
+    var b = document.querySelector('.filter-btn[data-key="all"]'); if (b) b.style.display = 'none';
+  }
+})();
+</script>
+<!-- PERIODO:END -->
