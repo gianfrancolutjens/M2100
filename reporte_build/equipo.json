@@ -6,7 +6,7 @@
    "padre": null,
    "tipo": "humano",
    "estado": "humano",
-   "nombre": "Dirección",
+   "nombre": "Dirección general",
    "persona": "Gianfranco Lutjens",
    "icono": "crown",
    "descripcion": "Define la estrategia comercial y de marketing de M2100, prioriza el trabajo de los agentes y toma las decisiones que la IA no toma: precios, descuentos, presupuesto de pauta y cambios en el equipo.",
@@ -28,16 +28,17 @@
     "Reporte nocturno",
     "Scoring diario (piloto)",
     "Copia de la auditoría diaria"
-   ]
+   ],
+   "cargo": "CEO"
   },
   {
    "id": "com",
    "padre": "dir",
    "tipo": "area",
    "estado": "area",
-   "nombre": "Comercial",
+   "nombre": "Gerencia Comercial",
    "icono": "briefcase",
-   "descripcion": "Convierte conversaciones de WhatsApp en visitas y reservas. Los agentes atienden, priorizan y detectan pendientes; la ejecutiva cierra.",
+   "descripcion": "Convierte conversaciones de WhatsApp en visitas y reservas. Los agentes atienden, priorizan y detectan pendientes; la ejecutiva cierra. Supervisa Carolina Climent: recibe los leads listos del asistente y las listas de los agentes, coordina visitas y lleva la negociación hasta la reserva.",
    "kpis": [
     {
      "n": "Oportunidades en Para Caro, Visita y Post visita",
@@ -52,6 +53,12 @@
      "n": "Derivados a la ejecutiva",
      "src": "fe:derivados"
     }
+   ],
+   "supervisor": "Carolina Climent",
+   "supervisor_rol": "Ejecutiva comercial · cierra las ventas",
+   "recibe": [
+    "Correo diario del auditor",
+    "Leads derivados por el asistente"
    ]
   },
   {
@@ -59,7 +66,7 @@
    "padre": "dir",
    "tipo": "area",
    "estado": "area",
-   "nombre": "Marketing",
+   "nombre": "Gerencia de Marketing",
    "icono": "speakerphone",
    "descripcion": "Trae leads al menor costo por lead calificado y mide qué fuente y qué anuncio funcionan de verdad.",
    "kpis": [
@@ -75,14 +82,16 @@
      "n": "Costo por calificado",
      "src": "fr:costo_calif"
     }
-   ]
+   ],
+   "supervisor": "Gianfranco Lutjens",
+   "supervisor_rol": "Define pauta, presupuesto y mensajes"
   },
   {
    "id": "cal",
    "padre": "dir",
    "tipo": "area",
    "estado": "area",
-   "nombre": "Calidad y operaciones",
+   "nombre": "Calidad y Operaciones",
    "icono": "shield",
    "descripcion": "Vigila que el bot responda bien, que el equipo cumpla los tiempos de respuesta y que el CRM refleje la realidad.",
    "kpis": [
@@ -94,7 +103,9 @@
      "n": "Siguiente a construir",
      "v": "Calidad del asistente"
     }
-   ]
+   ],
+   "supervisor": "Gianfranco Lutjens",
+   "supervisor_rol": "Vela por el servicio y la calidad de datos"
   },
   {
    "id": "wsp",
@@ -138,7 +149,7 @@
    "alimenta": [
     "aud",
     "cbot",
-    "car"
+    "com"
    ]
   },
   {
@@ -191,7 +202,7 @@
    ],
    "alimenta": [
     "sco",
-    "car",
+    "com",
     "cbot",
     "sla"
    ]
@@ -248,32 +259,7 @@
     "post",
     "react",
     "dir",
-    "car"
-   ]
-  },
-  {
-   "id": "car",
-   "padre": "com",
-   "tipo": "humano",
-   "estado": "humano",
-   "nombre": "Ejecutiva comercial",
-   "persona": "Carolina Climent",
-   "icono": "user",
-   "descripcion": "Recibe los leads listos del asistente y las listas de los agentes, coordina visitas y lleva la negociación hasta la reserva. Es quien cierra.",
-   "kpis": [
-    {
-     "n": "Leads que esperan respuesta hoy",
-     "v": "13",
-     "alerta": true
-    },
-    {
-     "n": "En visita o post visita",
-     "v": "109"
-    }
-   ],
-   "recibe": [
-    "Correo diario del auditor",
-    "Leads derivados por el asistente"
+    "com"
    ]
   },
   {
@@ -302,7 +288,7 @@
     "aud"
    ],
    "alimenta": [
-    "car"
+    "com"
    ]
   },
   {
@@ -329,7 +315,7 @@
     "sco"
    ],
    "alimenta": [
-    "car"
+    "com"
    ]
   },
   {
