@@ -1267,7 +1267,7 @@
     return {byLM, totals};
   }
 
-  const FUENTES = ['META-REEL','DIRECTO','META-LM','META-DM','META-TOUR','IVA','FORM-WEB','CORREO','TOCTOC'];
+  const FUENTES = ['META-REEL','DIRECTO','META-LM','META-DM','META-TOUR','IVA','IVA-PRO','FORM-WEB','CORREO','TOCTOC'];
   // Variantes de una misma fuente que se consolidan en una sola fila de la tabla.
   const FUENTE_ALIAS = {'META-LM1':'META-LM','META-LM2':'META-LM','FORM-WEB-COTIZADOR':'FORM-WEB','WEB':'FORM-WEB'};
   function normFuente(f){ return FUENTE_ALIAS[f] || f; }
@@ -1496,6 +1496,7 @@
     'META-TOUR':  '#1D4E89',
     'META-DM':    '#A8CDF0',
     'IVA':        '#C2568B',
+    'IVA-PRO':    '#8E3A6B',
     'DIRECTO':    '#4C9A6A',
     'FORM-WEB':   '#E0A93B',
     'CORREO':     '#9B6BB5',
@@ -1860,7 +1861,8 @@
       Object.assign({fuente:'META-REEL'}, aggMeta(RAW.o1, IDX_O)),
       Object.assign({fuente:'META-TOUR'}, aggMeta(RAW.o3||[], IDX_O)),
       Object.assign({fuente:'META-LM'},   aggMeta(RAW.o2, IDX_O2)),
-      Object.assign({fuente:'IVA'},       aggMeta(RAW.o4||[], IDX_O))
+      Object.assign({fuente:'IVA'},       aggMeta(RAW.o4||[], IDX_O)),
+      Object.assign({fuente:'IVA-PRO'},   aggMeta([], IDX_O))
     ];
     rows.forEach(d=>{
       const ghlF = RAW.ghl_opp.filter(g=> normFuente(g[1])===d.fuente && ghlDateChile(g[0])>=start && ghlDateChile(g[0])<=end);
